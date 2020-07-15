@@ -1,5 +1,9 @@
 // Import here Polyfills if needed. Recommended core-js (npm i -D core-js)
   // import "core-js/fn/array.find"
+import AuthenticationService from './authentication-service';
+import FactsService from './facts-service';
+import IdentityService from './identity-service';
+import MessagingService from './messaging-service';
   // ...
   export default class SelfSDK {
     appID: string;
@@ -8,6 +12,12 @@
     baseURL: string;
     messagingURL: string;
     autoReconnect: boolean;
+
+    private authenticationService: AuthenticationService;
+    private factsService: FactsService;
+    private identityService: IdentityService;
+    private messagingService: MessagingService;
+
 
     defaultBaseURL = "https://api.selfid.net";
     defaultMessagingURL = "wss://messaging.selfid.net/v1/messaging"
@@ -25,26 +35,27 @@
         this.baseURL = this.calculateBaseURL(opts)
         this.messagingURL = this.calculateMessagingURL(opts)
         this.autoReconnect = opts?.autoReconnect ? opts?.autoReconnect : true;
+
+        this.authenticationService = new AuthenticationService();
+        this.factsService = new FactsService();
+        this.identityService = new IdentityService();
+        this.messagingService = new MessagingService();
     }
 
-    authentication() {
-        console.log("authentication");
-        return true
+    authentication(): AuthenticationService {
+        return this.authenticationService
     }
 
-    facts() {
-        console.log("facts")
-        return true
+    facts(): FactsService {
+        return this.factsService
     }
 
-    identity() {
-        console.log("identity")
-        return true
+    identity(): IdentityService {
+        return this.identityService
     }
 
-    messaging() {
-        console.log("messaging")
-        return true
+    messaging(): MessagingService {
+        return this.messagingService
     }
 
     private calculateBaseURL(opts?: { baseURL?: string, env?: string }) {
