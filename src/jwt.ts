@@ -25,7 +25,8 @@ export default class Jwt {
             jti: uuidv4(),
             iat: Math.floor((new Date().getTime() - fiveMins) / 1000),
             exp: Math.floor((new Date().getTime() + anHour) / 1000),
-            iss: this.appID
+            iss: this.appID,
+            typ: 'api-token'
         })
         let body = await this.encode(jsonBody)
 
