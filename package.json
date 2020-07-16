@@ -119,6 +119,9 @@
   },
   "dependencies": {
     "@types/libsodium-wrappers": "^0.7.7",
-    "libsodium-wrappers": "^0.7.6"
+    "@types/uuid": "^8.0.0",
+    "libsodium-wrappers": "^0.7.6",
+    "text-encoding": "^0.7.0",
+    "uuid": "^8.2.0"
   }
 }
