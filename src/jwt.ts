@@ -46,7 +46,7 @@ export default class Jwt {
     private async sign(input: string) {
         try {
             await this.load()
-            let signature = this.sodium.crypto_sign(input, this.keypair.privateKey)
+            let signature = this.sodium.crypto_sign_detached(input, this.keypair.privateKey)
             return this.sodium.to_base64(signature, this.sodium.base64_variants.URLSAFE_NO_PADDING)
         } catch (error) {
             console.log(error)
