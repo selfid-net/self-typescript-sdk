@@ -4,6 +4,8 @@ import AuthenticationService from './authentication-service';
 import FactsService from './facts-service';
 import IdentityService from './identity-service';
 import MessagingService from './messaging-service';
+import Jwt from './jwt';
+
   // ...
   export default class SelfSDK {
     appID: string;
@@ -12,11 +14,12 @@ import MessagingService from './messaging-service';
     baseURL: string;
     messagingURL: string;
     autoReconnect: boolean;
+    jwt: any;
 
-    private authenticationService: AuthenticationService;
-    private factsService: FactsService;
-    private identityService: IdentityService;
-    private messagingService: MessagingService;
+    private authenticationService: any;
+    private factsService: any;
+    private identityService: any;
+    private messagingService: any;
 
 
     defaultBaseURL = "https://api.selfid.net";
@@ -35,11 +38,22 @@ import MessagingService from './messaging-service';
         this.baseURL = this.calculateBaseURL(opts)
         this.messagingURL = this.calculateMessagingURL(opts)
         this.autoReconnect = opts?.autoReconnect ? opts?.autoReconnect : true;
+    }
 
-        this.authenticationService = new AuthenticationService();
-        this.factsService = new FactsService();
-        this.identityService = new IdentityService();
-        this.messagingService = new MessagingService();
+    public static async build(
+        appID: string,
+        appKey: string,
+        storageKey: string,
+        opts?: { baseURL?: string, messagingURL?: string, env?: string, autoReconnect?: boolean }): Promise<SelfSDK> {
+            const sdk = new SelfSDK(appID, appKey, storageKey, opts)
+            sdk.jwt = await Jwt.build(appID, appKey)
+
+            sdk.authenticationService = new AuthenticationService();
+            sdk.factsService = new FactsService();
+            sdk.identityService = new IdentityService(sdk.jwt);
+            sdk.messagingService = new MessagingService();
+
+            return sdk
     }
 
     authentication(): AuthenticationService {
