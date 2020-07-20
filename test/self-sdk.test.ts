@@ -13,7 +13,7 @@ let sdk: SelfSDK;
 
 describe("SelfSDK test", () => {
     beforeEach(async () => {
-        sdk = new SelfSDK("appId", "appKey", "storageKey")
+        sdk = await SelfSDK.build( "109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random");
     })
 
     it("is instantiable", () => {
@@ -41,19 +41,19 @@ describe("SelfSDK test", () => {
         expect(sdk.messagingURL).toEqual(sdk.defaultMessagingURL)
     })
 
-    it("urls vary for each environment", () => {
-        const sdkReview = new SelfSDK("appId", "appKey", "storageKey", {env: "review"})
+    it("urls vary for each environment", async() => {
+        const sdkReview = await SelfSDK.build("109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random", {env: "review"});
         expect(sdkReview.baseURL).toEqual(`https://api.review.selfid.net`)
         expect(sdkReview.messagingURL).toEqual(`wss://messaging.review.selfid.net/v1/messaging`)
 
-        const sdkSandbox = new SelfSDK("appId", "appKey", "storageKey", {env: "sandbox"})
+        const sdkSandbox = await SelfSDK.build("109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random", {env: "sandbox"});
         expect(sdkSandbox.baseURL).toEqual(`https://api.sandbox.selfid.net`)
         expect(sdkSandbox.messagingURL).toEqual(`wss://messaging.sandbox.selfid.net/v1/messaging`)
     })
 
-    it("forced urls take prevalence", () => {
+    it("forced urls take prevalence", async() => {
         let opts = {env: "review", baseURL: "http://localhost", messagingURL: "ws://localhost"}
-        let localSDK = new SelfSDK("appId", "appKey", "storageKey", opts)
+        const localSDK = await SelfSDK.build("109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random", opts);
 
         expect(localSDK.baseURL).toEqual(opts["baseURL"])
         expect(localSDK.messagingURL).toEqual(opts["messagingURL"])

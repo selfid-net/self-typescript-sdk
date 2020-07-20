@@ -9,7 +9,11 @@ let sdk: SelfSDK;
 
 describe("Authentication service", () => {
     beforeEach(async () => {
-        sdk = new SelfSDK("appId", "appKey", "storageKey")
+        sdk = await SelfSDK.build( "109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random");
+    })
+
+    afterEach(async () => {
+        sdk.jwt.stop()
     })
 
     it("request is truthy", () => {
