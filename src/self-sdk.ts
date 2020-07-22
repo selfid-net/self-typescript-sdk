@@ -51,9 +51,14 @@ import Jwt from './jwt';
             sdk.authenticationService = new AuthenticationService();
             sdk.factsService = new FactsService();
             sdk.identityService = new IdentityService(sdk.jwt);
-            sdk.messagingService = new MessagingService();
+            sdk.messagingService = await MessagingService.build(sdk.baseURL, sdk.jwt, sdk.identityService);
 
             return sdk
+    }
+
+    stop() {
+        this.jwt.stop()
+        this.messagingService.close()
     }
 
     authentication(): AuthenticationService {
