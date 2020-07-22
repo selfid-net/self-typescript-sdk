@@ -160,6 +160,7 @@ export default class Messaging {
     }
 
     private async wait(id: string, request: Request): Promise<Response|boolean> {
+        // TODO (adriacidre) this methods should manage a waiting timeout.
         console.log("waiting for acknowledgement")
         request.acknowledged = await this.wait_for_ack(id)
         console.log("acknowledged")

@@ -1,6 +1,6 @@
-interface Attestation {
+interface Attestation {}
+type MessageProcessor = (n: number) => any;
 
-}
 
 export default interface Fact {
     name: string
