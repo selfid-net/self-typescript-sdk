@@ -4,6 +4,7 @@ import sourceMaps from 'rollup-plugin-sourcemaps'
 import camelCase from 'lodash.camelcase'
 import typescript from 'rollup-plugin-typescript2'
 import json from 'rollup-plugin-json'
+import ts from "@wessberg/rollup-plugin-ts"
 
 const pkg = require('./package.json')
 
@@ -25,8 +26,21 @@ export default {
     json(),
     // Compile TypeScript files
     typescript({ useTsconfigDeclarationDir: true }),
+
     // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
-    commonjs(),
+    commonjs({
+        namedExports: {
+            // left-hand side can be an absolute path, a path
+            // relative to the current directory, or the name
+            // of a module in node_modules
+            'generated/acl_pb.js': [ 'AccessControlList' ],
+            'generated/msgtype_pb.js': [ 'MsgType' ],
+            'generated/aclcommand_pb.js': [ 'ACLCommand' ],
+            'generated/message_pb.js': [ 'Message' ],
+            'generated/auth_pb.js': [ 'Auth' ]
+          }
+    }),
+
     // Allow node_modules resolution, so you can use 'external' to control
     // which external modules to include in the bundle
     // https://github.com/rollup/rollup-plugin-node-resolve#usage
@@ -34,5 +48,10 @@ export default {
 
     // Resolve source maps to the original source
     sourceMaps(),
+
+    // https://github.com/wessberg/rollup-plugin-ts
+    ts({
+        tsconfig: resolvedConfig => ({...resolvedConfig, allowJs: false, checkJs: false})
+    })
   ],
 }

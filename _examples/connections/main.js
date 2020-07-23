@@ -36,16 +36,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var self_sdk_1 = require("../../dist/lib/self-sdk");
+var self_sdk_js_1 = require("../../dist/lib/self-sdk.js");
 function manageConnections(appID, appSecret, connection) {
     return __awaiter(this, void 0, void 0, function () {
         var sdk, success, connections;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, self_sdk_1["default"].build("109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random")];
+                case 0: return [4 /*yield*/, self_sdk_js_1["default"].build(appID, appSecret, "random")];
                 case 1:
                     sdk = _a.sent();
-                    return [4 /*yield*/, sdk.messaging().permitConnection("35918759412")];
+                    return [4 /*yield*/, sdk.messaging().permitConnection(connection)];
                 case 2:
                     success = _a.sent();
                     if (!success) {
@@ -56,7 +56,7 @@ function manageConnections(appID, appSecret, connection) {
                     connections = _a.sent();
                     console.log("Allowed connections are:");
                     console.log(connections);
-                    return [4 /*yield*/, sdk.messaging().revokeConnection("35918759412")];
+                    return [4 /*yield*/, sdk.messaging().revokeConnection(connection)];
                 case 4:
                     success = _a.sent();
                     if (!success) {
