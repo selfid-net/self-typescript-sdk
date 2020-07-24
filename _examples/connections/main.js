@@ -37,14 +37,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var self_sdk_js_1 = require("../../dist/lib/self-sdk.js");
+var process_1 = require("process");
 function manageConnections(appID, appSecret, connection) {
     return __awaiter(this, void 0, void 0, function () {
         var sdk, success, connections;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, self_sdk_js_1["default"].build(appID, appSecret, "random")];
+                case 0: return [4 /*yield*/, self_sdk_js_1["default"].build(appID, appSecret, "random", { env: "review" })];
                 case 1:
                     sdk = _a.sent();
+                    console.log("\nPermitting connection " + connection);
+                    console.log("----------------------------");
                     return [4 /*yield*/, sdk.messaging().permitConnection(connection)];
                 case 2:
                     success = _a.sent();
@@ -54,8 +57,11 @@ function manageConnections(appID, appSecret, connection) {
                     return [4 /*yield*/, sdk.messaging().allowedConnections()];
                 case 3:
                     connections = _a.sent();
-                    console.log("Allowed connections are:");
+                    console.log("\nAllowed connections are:");
+                    console.log("----------------------------");
                     console.log(connections);
+                    console.log("\nRevoking connection " + connection);
+                    console.log("----------------------------");
                     return [4 /*yield*/, sdk.messaging().revokeConnection(connection)];
                 case 4:
                     success = _a.sent();
@@ -65,8 +71,11 @@ function manageConnections(appID, appSecret, connection) {
                     return [4 /*yield*/, sdk.messaging().allowedConnections()];
                 case 5:
                     connections = _a.sent();
-                    console.log("Allowed connections are:");
+                    console.log("\nAllowed connections are:");
+                    console.log("----------------------------");
                     console.log(connections);
+                    sdk.stop();
+                    process_1.exit();
                     return [2 /*return*/];
             }
         });
@@ -74,12 +83,18 @@ function manageConnections(appID, appSecret, connection) {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function () {
+        var appID, appSecret, selfID;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     console.log("managing connections");
-                    return [4 /*yield*/, manageConnections("109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "35918759412")];
+                    appID = process.env["SELF_APP_ID"];
+                    appSecret = process.env["SELF_APP_SECRET"];
+                    selfID = process.env["SELF_USER_ID"];
+                    // tsc main.ts && SELF_APP_ID="109a21fdd1bfaffa2717be1b4edb57e9" SELF_APP_SECRET="RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4" SELF_USER_ID="35918759412" node main.js
+                    return [4 /*yield*/, manageConnections(appID, appSecret, selfID)];
                 case 1:
+                    // tsc main.ts && SELF_APP_ID="109a21fdd1bfaffa2717be1b4edb57e9" SELF_APP_SECRET="RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4" SELF_USER_ID="35918759412" node main.js
                     _a.sent();
                     console.log("managing done");
                     return [2 /*return*/];

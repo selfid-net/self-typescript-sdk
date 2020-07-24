@@ -13,13 +13,13 @@
     "checkJs": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "declarationDir": "src/generated",
+    "declarationDir": "dist/types",
     "outDir": "dist/lib",
     "typeRoots": [
       "node_modules/@types"
     ]
   },
   "include": [
-    "src", "src/generated"
+    "src", "generated"
   ]
 }

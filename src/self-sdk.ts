@@ -78,6 +78,10 @@ export default class SelfSDK {
   }
 
   private calculateBaseURL(opts?: { baseURL?: string; env?: string }) {
+    if (!opts) {
+      return this.defaultBaseURL
+    }
+
     if (opts.baseURL) {
       return opts.baseURL
     }
@@ -89,6 +93,10 @@ export default class SelfSDK {
   }
 
   private calculateMessagingURL(opts?: { messagingURL?: string; env?: string }) {
+    if (!opts) {
+      return this.defaultMessagingURL
+    }
+
     if (opts.messagingURL) {
       return opts.messagingURL
     }
