@@ -13,9 +13,26 @@ describe("Messaging service", () => {
     })
 
     afterEach(async () => {
-        sdk.jwt.stop()
+        sdk.stop()
     })
 
+    it("subscribe is truthy", async() => {
+        console.log("initialized")
+        console.log("permitting")
+        let success = await sdk.messaging().permitConnection("35918759412")
+        expect(success).toBeTruthy()
+        console.log("permitted")
+
+        let connections = await sdk.messaging().allowedConnections()
+        console.log(connections)
+        expect(Object.keys(connections).length).toEqual(2)
+
+        success = await sdk.messaging().revokeConnection("35918759412")
+        expect(success).toBeTruthy()
+        console.log("revoked")
+    })
+
+    /*
     it("subscribe is truthy", () => {
         let req = sdk.messaging().subscribe("my.message.type", () => {
             console.log("called back")
@@ -52,4 +69,6 @@ describe("Messaging service", () => {
         let req = sdk.messaging().notify("myselfid", "some message")
         expect(req).toBeTruthy()
     })
+    */
+
 })

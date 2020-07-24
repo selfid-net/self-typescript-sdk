@@ -36,7 +36,7 @@ export default class Jwt {
     }
 
 
-    public authToken() {
+    public authToken(): string {
         let header = this.header()
         let fiveMins = 5*60*1000
         let anHour = 60*60*1000
@@ -55,6 +55,20 @@ export default class Jwt {
         let signature = this.sign(payload)
 
         return `${payload}.${signature}`
+    }
+
+    public prepare(input: any) {
+        let jsonBody = JSON.stringify(input)
+        let body = this.encode(jsonBody)
+
+        let payload = `${this.header()}.${body}`
+        let signature = this.sign(payload)
+
+        return this.encode(JSON.stringify({
+            payload: body,
+            protected: this.header(),
+            signature: signature
+          }))
     }
 
     public sign(input: string) {
@@ -95,7 +109,7 @@ export default class Jwt {
         return this.encode(`{"alg":"EdDSA","typ":"JWT"}`)
     }
 
-    private encode(input: string) {
+    encode(input: string) {
         return this.sodium.to_base64(input, this.sodium.base64_variants.URLSAFE_NO_PADDING)
     }
 }

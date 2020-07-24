@@ -1,0 +1,9 @@
+{
+  "name": "self-protos",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "@types/google-protobuf": "^3.2.7",
+    "google-protobuf": "^3.8.0-rc.1"
+  }
+}
