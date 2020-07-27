@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid'
 import IdentityService from './identity-service'
 import Messaging from './messaging'
 
-import { AccessControlList } from 'self-protos/acl_pb'
-import { MsgType } from 'self-protos/msgtype_pb'
-import { ACLCommand } from 'self-protos/aclcommand_pb'
+import { AccessControlList } from '../generated/acl_pb'
+import { MsgType } from '../generated/msgtype_pb'
+import { ACLCommand } from '../generated/aclcommand_pb'
 
 export interface Request {
   [details: string]: any
@@ -19,16 +19,12 @@ export interface ACLRule {
 export default class MessagingService {
   is: IdentityService
   ms: any
+  jwt: Jwt
 
-  constructor(url: string, jwt: Jwt, is: IdentityService) {
+  constructor(jwt: Jwt, is: IdentityService, ms: Messaging) {
+    this.jwt = jwt
     this.is = is
-  }
-
-  public static async build(url: string, jwt: Jwt, is: IdentityService): Promise<MessagingService> {
-    let m = new MessagingService(url, jwt, is)
-    m.ms = await Messaging.build(url, jwt)
-
-    return m
+    this.ms = ms
   }
 
   subscribe(type: string, callback: any) {
@@ -37,11 +33,11 @@ export default class MessagingService {
 
   async permitConnection(selfid: string): Promise<boolean> {
     console.log('permitting connection')
-    let anHour = 60 * 60 * 1000
-    let exp = new Date(Math.floor(this.is.jwt.now() + anHour))
+    let someYears = 999 * 365 * 24 * 60 * 60 * 1000
+    let exp = new Date(Math.floor(this.jwt.now() + someYears))
 
-    let payload = this.is.jwt.prepare({
-      iss: this.is.jwt.appID,
+    let payload = this.jwt.prepare({
+      iss: this.jwt.appID,
       acl_source: selfid,
       acl_exp: exp.toISOString()
     })
@@ -77,13 +73,10 @@ export default class MessagingService {
   }
 
   async revokeConnection(selfid: string): Promise<boolean> {
-    console.log('permitting connection')
-    let anHour = 60 * 60 * 1000
-    let exp = new Date(Math.floor(this.is.jwt.now() + anHour))
+    console.log('revoking connection')
 
-    let payload = this.is.jwt.prepare({
-      iss: this.is.jwt.appID,
-      acl_source: selfid
+    let payload = this.jwt.prepare({
+      iss: this.jwt.appID
     })
 
     const msg = new AccessControlList()

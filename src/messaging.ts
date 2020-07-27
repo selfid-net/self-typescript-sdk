@@ -1,8 +1,9 @@
 import Jwt from './jwt'
+import IdentityService from './identity-service'
 
-import { Auth } from 'self-protos/auth_pb'
-import { MsgType } from 'self-protos/msgtype_pb'
-import { Message } from 'self-protos/message_pb'
+import { Auth } from '../generated/auth_pb'
+import { MsgType } from '../generated/msgtype_pb'
+import { Message } from '../generated/message_pb'
 
 interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
@@ -18,13 +19,15 @@ export default class Messaging {
   ws: WebSocket
   connected: boolean
   requests: Map<string, Request>
+  is: IdentityService
 
-  constructor(url: string, jwt: Jwt) {
+  constructor(url: string, jwt: Jwt, is: IdentityService) {
     console.log('creating messaging')
     this.jwt = jwt
     this.url = url
     this.requests = new Map()
     this.connected = false
+    this.is = is
 
     const WebSocket = require('ws')
     this.ws = new WebSocket('wss://messaging.review.selfid.net/v1/messaging')
@@ -37,7 +40,7 @@ export default class Messaging {
       console.log('disconnected')
     }
 
-    this.ws.onmessage = input => {
+    this.ws.onmessage = async input => {
       let msg = Message.deserializeBinary(input.data)
       console.log(`received ${msg.getId()} (${msg.getType()})`)
       switch (msg.getType()) {
@@ -58,12 +61,59 @@ export default class Messaging {
         }
         case MsgType.MSG: {
           console.log(`message received ${msg.getId()}`)
+          await this.processIncommingMessage(msg)
           break
         }
         default: {
           console.log('invalid message')
           break
         }
+      }
+    }
+  }
+
+  public static async build(url: string, jwt: Jwt, is: IdentityService): Promise<Messaging> {
+    let ms = new Messaging(url, jwt, is)
+    console.log('waiting for connection')
+    await ms.wait_for_connection()
+
+    console.log('connected')
+    await ms.authenticate()
+    console.log('authenticated')
+
+    return ms
+  }
+
+  private async processIncommingMessage(msg: Message) {
+    let ciphertext = JSON.parse(Buffer.from(msg.getCiphertext_asB64(), 'base64').toString())
+    let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+
+    let pks = await this.is.publicKeys(payload.iss)
+    if (!this.jwt.verify(ciphertext, pks[0].key)) {
+      console.log('unverified message ' + payload.cid)
+      return
+    }
+
+    switch (payload.typ) {
+      case 'identities.facts.query.req': {
+        console.log('incoming fact request')
+        break
+      }
+      case 'identities.facts.query.resp': {
+        console.log('incoming fact response')
+        break
+      }
+      case 'identities.authenticate.resp': {
+        let r = this.requests.get(payload.cid)
+        r.response = payload
+        r.responded = true
+        console.log(`received ${payload.cid}`)
+        this.requests.set(payload.cid, r)
+        break
+      }
+      case 'identities.authenticate.req': {
+        console.log('incoming authentication request')
+        break
       }
     }
   }
@@ -85,24 +135,8 @@ export default class Messaging {
     console.log('acl response processed')
   }
 
-  public static async build(url: string, jwt: Jwt): Promise<Messaging> {
-    let ms = new Messaging(url, jwt)
-    console.log('waiting for connection')
-    await ms.wait_for_connection()
-
-    console.log('connected')
-    await ms.authenticate()
-    console.log('authenticated')
-
-    return ms
-  }
-
   close() {
     this.ws.close()
-  }
-
-  private processIncommingMessage() {
-    console.log('processing_message')
   }
 
   private connect() {
@@ -118,7 +152,7 @@ export default class Messaging {
     msg.setType(MsgType.AUTH)
     msg.setId('authentication')
     msg.setToken(token)
-    msg.setDevice('1')
+    msg.setDevice(this.jwt.deviceID)
 
     await this.send_and_wait(msg.getId(), {
       data: msg.serializeBinary()
@@ -135,15 +169,17 @@ export default class Messaging {
     if (!request.responded) {
       request.responded = false
     }
+    console.log(' -> sent ' + id)
     this.send(id, request)
 
+    console.log(' -> waiting for ' + id)
     return this.wait(id, request)
   }
 
   async request(
     id: string,
     data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
-  ): Promise<Response | boolean> {
+  ): Promise<any> {
     return this.send_and_wait(id, {
       data: data,
       waitForResponse: true
@@ -158,16 +194,17 @@ export default class Messaging {
 
   private async wait(id: string, request: Request): Promise<Response | boolean> {
     // TODO (adriacidre) this methods should manage a waiting timeout.
-    console.log('waiting for acknowledgement')
-    request.acknowledged = await this.wait_for_ack(id)
-    console.log('acknowledged')
+    // TODO () ACK is based on JTI while Response on CID!!!!
     if (!request.waitForResponse) {
+      console.log('waiting for acknowledgement')
+      request.acknowledged = await this.wait_for_ack(id)
       console.log('do not need to wait for response')
       return request.acknowledged
     }
     console.log('waiting for response')
-
     await this.wait_for_response(id)
+    console.log('responded')
+    console.log(request.response)
 
     return request.response
   }
@@ -187,16 +224,17 @@ export default class Messaging {
   }
 
   private wait_for_response(id: string): Promise<Response | undefined> {
+    console.log(`waiting for response ${id}`)
     return new Promise(async (resolve, reject) => {
       while (this.requests.has(id)) {
         let req = this.requests.get(id)
-        if (req === undefined) {
-          resolve()
-        } else if (req.response !== undefined) {
+        if (req && req.response) {
           resolve(req.response)
+          break
         }
         await this.delay(100)
       }
+      resolve()
     })
   }
 
