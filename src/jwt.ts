@@ -38,14 +38,14 @@ export default class Jwt {
 
   public authToken(): string {
     let header = this.header()
-    let fiveMins = 5 * 60 * 1000
-    let anHour = 60 * 60 * 1000
+    let fiveMins = 1 * 60 * 1000
+    let oneMinute = 1 * 60 * 1000
 
     let now = this.now()
     let jsonBody = JSON.stringify({
       jti: uuidv4(),
       iat: Math.floor((now - fiveMins) / 1000),
-      exp: Math.floor((now + anHour) / 1000),
+      exp: Math.floor((now + oneMinute) / 1000),
       iss: this.appID,
       typ: 'api-token'
     })
@@ -73,7 +73,7 @@ export default class Jwt {
     )
   }
 
-  public sign(input: string) {
+  public sign(input: string): string {
     let signature = this.sodium.crypto_sign_detached(input, this.keypair.privateKey)
     return this.sodium.to_base64(signature, this.sodium.base64_variants.URLSAFE_NO_PADDING)
   }
