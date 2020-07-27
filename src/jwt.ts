@@ -38,13 +38,13 @@ export default class Jwt {
 
   public authToken(): string {
     let header = this.header()
-    let fiveMins = 1 * 60 * 1000
+    let fiveSecs = 5 * 1000
     let oneMinute = 1 * 60 * 1000
 
     let now = this.now()
     let jsonBody = JSON.stringify({
       jti: uuidv4(),
-      iat: Math.floor((now - fiveMins) / 1000),
+      iat: Math.floor((now - fiveSecs) / 1000),
       exp: Math.floor((now + oneMinute) / 1000),
       iss: this.appID,
       typ: 'api-token'
