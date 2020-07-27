@@ -5,6 +5,7 @@ import FactsService from './facts-service'
 import IdentityService from './identity-service'
 import MessagingService from './messaging-service'
 import Jwt from './jwt'
+import Messaging from './messaging'
 
 // ...
 export default class SelfSDK {
@@ -15,6 +16,7 @@ export default class SelfSDK {
   messagingURL: string
   autoReconnect: boolean
   jwt: any
+  ms: any
 
   private authenticationService: any
   private factsService: any
@@ -48,10 +50,16 @@ export default class SelfSDK {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
     sdk.jwt = await Jwt.build(appID, appKey)
 
-    sdk.authenticationService = new AuthenticationService()
     sdk.factsService = new FactsService()
     sdk.identityService = new IdentityService(sdk.jwt)
-    sdk.messagingService = await MessagingService.build(sdk.baseURL, sdk.jwt, sdk.identityService)
+    sdk.ms = await Messaging.build(sdk.baseURL, sdk.jwt, sdk.identityService)
+
+    sdk.messagingService = new MessagingService(sdk.jwt, sdk.identityService, sdk.ms)
+    sdk.authenticationService = new AuthenticationService(
+      sdk.jwt,
+      sdk.messagingService.ms,
+      sdk.identityService
+    )
 
     return sdk
   }
