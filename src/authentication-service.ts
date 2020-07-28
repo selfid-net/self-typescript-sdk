@@ -82,13 +82,14 @@ export default class AuthenticationService {
     this.ms.subscribe('identities.authenticate.resp', callback)
   }
 
-  private buildRequest(selfid: string, opts?: { cid?: string }): any {
+  private buildRequest(selfid: string, opts?: { cid?: string; exp?: number }): any {
     let options = opts ? opts : {}
     let cid = options.cid ? options.cid : uuidv4()
+    let expTimeout = options.exp ? options.exp : 300
 
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))
-    let exp = new Date(Math.floor(this.jwt.now() + 300 * 60))
+    let exp = new Date(Math.floor(this.jwt.now() + expTimeout * 60))
 
     // Ciphertext
     return {
