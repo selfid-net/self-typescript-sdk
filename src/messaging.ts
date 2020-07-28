@@ -19,6 +19,7 @@ export default class Messaging {
   ws: WebSocket
   connected: boolean
   requests: Map<string, Request>
+  callbacks: Map<string, (n: any) => any>
   is: IdentityService
 
   constructor(url: string, jwt: Jwt, is: IdentityService) {
@@ -26,6 +27,7 @@ export default class Messaging {
     this.jwt = jwt
     this.url = url
     this.requests = new Map()
+    this.callbacks = new Map()
     this.connected = false
     this.is = is
 
@@ -104,11 +106,18 @@ export default class Messaging {
         break
       }
       case 'identities.authenticate.resp': {
-        let r = this.requests.get(payload.cid)
-        r.response = payload
-        r.responded = true
-        console.log(`received ${payload.cid}`)
-        this.requests.set(payload.cid, r)
+        if (this.requests.has(payload.cid)) {
+          let r = this.requests.get(payload.cid)
+          r.response = payload
+          r.responded = true
+          console.log(`received ${payload.cid}`)
+          this.requests.set(payload.cid, r)
+        } else if (this.callbacks.has('identities.authenticate.resp')) {
+          console.log('getting callback')
+          let fn = this.callbacks.get('identities.authenticate.resp')
+          console.log('got callback')
+          fn(payload)
+        }
         break
       }
       case 'identities.authenticate.req': {
@@ -257,5 +266,9 @@ export default class Messaging {
 
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  subscribe(messageType: string, callback: (n: any) => any) {
+    this.callbacks.set(messageType, callback)
   }
 }

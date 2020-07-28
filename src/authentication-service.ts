@@ -1,4 +1,12 @@
 import { v4 as uuidv4 } from 'uuid'
+import {
+  QRCode,
+  ErrorCorrectLevel,
+  QRNumber,
+  QRAlphaNum,
+  QR8BitByte,
+  QRKanji
+} from 'qrcode-generator-ts/js'
 
 import Jwt from './jwt'
 import IdentityService from '../generated/identity-service'
@@ -26,21 +34,64 @@ export default class AuthenticationService {
     selfid: string,
     callback?: MessageProcessor,
     opts?: { cid?: string }
-  ): Promise<boolean> {
-    console.log(`authenticating ${selfid}`)
+  ): Promise<boolean | string> {
     let id = uuidv4()
-    let options = opts ? opts : {}
-    let cid = options.cid ? options.cid : uuidv4()
 
     // Get user's device
     let devices = await this.is.devices(selfid)
+
+    let j = this.buildRequest(selfid, opts)
+    let ciphertext = this.jwt.prepare(j)
+
+    // Envelope
+    const msg = new Message()
+    msg.setType(MsgType.MSG)
+    msg.setId(id)
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    msg.setRecipient(`${selfid}:${devices[0]}`)
+    msg.setCiphertext(ciphertext)
+
+    console.log('requesting ' + msg.getId())
+    let res = await this.ms.request(j.cid, msg.serializeBinary())
+
+    return res.status === 'accepted'
+  }
+
+  generateQR(opts?: { selfid?: string; cid?: string }): Buffer {
+    let options = opts ? opts : {}
+    let selfid = options.selfid ? options.selfid : '-'
+    let body = this.jwt.toSignedJson(this.buildRequest(selfid, options))
+
+    let qr = new QRCode()
+    qr.setTypeNumber(15)
+    qr.setErrorCorrectLevel(ErrorCorrectLevel.L)
+    qr.addData(body)
+    qr.make()
+
+    let data = qr.toDataURL(5).split(',')
+    let buf = Buffer.from(data[1], 'base64')
+
+    return buf
+  }
+
+  generateDeepLink(callback: MessageProcessor, opts?: { selfid?: string; cid?: string }) {
+    return true
+  }
+
+  subscribe(callback: (n: any) => any) {
+    this.ms.subscribe('identities.authenticate.resp', callback)
+  }
+
+  private buildRequest(selfid: string, opts?: { cid?: string }): any {
+    let options = opts ? opts : {}
+    let cid = options.cid ? options.cid : uuidv4()
 
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))
     let exp = new Date(Math.floor(this.jwt.now() + 300 * 60))
 
     // Ciphertext
-    let j = {
+    return {
       typ: 'identities.authenticate.req',
       iss: this.jwt.appID,
       sub: selfid,
@@ -50,33 +101,5 @@ export default class AuthenticationService {
       cid: cid,
       jti: uuidv4()
     }
-    let ciphertext = this.jwt.prepare(j)
-
-    // Envelope
-    const msg = new Message()
-    msg.setType(MsgType.MSG)
-    msg.setId(id)
-    console.log(` - from : ${this.jwt.appID}:${this.jwt.deviceID}`)
-    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
-    console.log(` - to : ${selfid}:${devices[0]}`)
-    msg.setRecipient(`${selfid}:${devices[0]}`)
-    msg.setCiphertext(ciphertext)
-
-    console.log('requesting ' + msg.getId())
-    let res = await this.ms.request(cid, msg.serializeBinary())
-
-    return res.status === 'accepted'
-  }
-
-  generateQR(opts?: { selfid?: string; cid?: string }) {
-    return true
-  }
-
-  generateDeepLink(callback: MessageProcessor, opts?: { selfid?: string; cid?: string }) {
-    return true
-  }
-
-  subscribe(callback: MessageProcessor) {
-    return true
   }
 }

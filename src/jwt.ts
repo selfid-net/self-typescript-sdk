@@ -54,23 +54,26 @@ export default class Jwt {
     let payload = `${header}.${body}`
     let signature = this.sign(payload)
 
+    console.log(`${payload}.${signature}`)
     return `${payload}.${signature}`
   }
 
   public prepare(input: any) {
+    return this.encode(this.toSignedJson(input))
+  }
+
+  public toSignedJson(input: any) {
     let jsonBody = JSON.stringify(input)
     let body = this.encode(jsonBody)
 
     let payload = `${this.header()}.${body}`
     let signature = this.sign(payload)
 
-    return this.encode(
-      JSON.stringify({
-        payload: body,
-        protected: this.header(),
-        signature: signature
-      })
-    )
+    return JSON.stringify({
+      payload: body,
+      protected: this.header(),
+      signature: signature
+    })
   }
 
   public sign(input: string): string {
