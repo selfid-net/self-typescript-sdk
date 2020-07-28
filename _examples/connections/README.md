@@ -9,7 +9,5 @@ In order to run this example, you must have a valid app keypair. Self-keypairs a
 Once you have your valid `SELF_APP_ID` and `SELF_APP_SECRET` you can run this example with:
 
 ```bash
-$ SELF_APP_ID=XXXXX SELF_APP_SECRET=XXXXXXXX SELF_USER_ID="<your_self_id>" node main.js
+$ tsc main.ts && SELF_APP_ID=XXXXX SELF_APP_SECRET=XXXXXXXX SELF_USER_ID="<your_self_id>" node main.js
 ```
-
-If you have made changes to main.ts and you want to transpile them to javascript use `tsc main.ts`.

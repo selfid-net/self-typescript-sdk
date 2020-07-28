@@ -54,7 +54,6 @@ export default class Jwt {
     let payload = `${header}.${body}`
     let signature = this.sign(payload)
 
-    console.log(`${payload}.${signature}`)
     return `${payload}.${signature}`
   }
 

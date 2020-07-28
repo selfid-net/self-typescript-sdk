@@ -14,10 +14,8 @@ Once you have your valid `SELF_APP_ID` and `SELF_APP_SECRET` you can run this ex
 
 
 ```bash
-$ SELF_APP_ID=XXXXX SELF_APP_SECRET=XXXXXXXX SELF_USER_ID="<your_self_id>" node main.js
+$ tsc main.ts && SELF_APP_ID=XXXXX SELF_APP_SECRET=XXXXXXXX SELF_USER_ID="<your_self_id>" node main.js
 ```
-
-If you have made changes to main.ts and you want to transpile them to javascript use `tsc main.ts`.
 
 Note you must provide a valid user self_id `your_self_id`, this exqample will send an authentication request to this self_id, so keep an eye on the user's device to look for a authentication request.
 
