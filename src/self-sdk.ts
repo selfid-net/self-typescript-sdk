@@ -55,10 +55,14 @@ export default class SelfSDK {
     sdk.ms = await Messaging.build(sdk.baseURL, sdk.jwt, sdk.identityService)
 
     sdk.messagingService = new MessagingService(sdk.jwt, sdk.identityService, sdk.ms)
+
+    let options = opts ? opts : {}
+    let env = options.env ? options.env : '-'
     sdk.authenticationService = new AuthenticationService(
       sdk.jwt,
       sdk.messagingService.ms,
-      sdk.identityService
+      sdk.identityService,
+      env
     )
 
     return sdk

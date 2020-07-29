@@ -23,11 +23,13 @@ export default class AuthenticationService {
   jwt: Jwt
   ms: Messaging
   is: IdentityService
+  env: string
 
-  constructor(jwt: Jwt, ms: Messaging, is: IdentityService) {
+  constructor(jwt: Jwt, ms: Messaging, is: IdentityService, env: string) {
     this.jwt = jwt
     this.ms = ms
     this.is = is
+    this.env = env
   }
 
   async request(
@@ -74,8 +76,18 @@ export default class AuthenticationService {
     return buf
   }
 
-  generateDeepLink(callback: MessageProcessor, opts?: { selfid?: string; cid?: string }) {
-    return true
+  generateDeepLink(callback: string, opts?: { selfid?: string; cid?: string }): string {
+    let options = opts ? opts : {}
+    let selfid = options.selfid ? options.selfid : '-'
+    let body = this.jwt.toSignedJson(this.buildRequest(selfid, options))
+    let encodedBody = this.jwt.encode(body)
+
+    if (this.env === '') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app`
+    } else if (this.env === 'development') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app.dev`
+    }
+    return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app.${this.env}`
   }
 
   subscribe(callback: (n: any) => any) {
