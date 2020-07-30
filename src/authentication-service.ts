@@ -32,11 +32,7 @@ export default class AuthenticationService {
     this.env = env
   }
 
-  async request(
-    selfid: string,
-    callback?: MessageProcessor,
-    opts?: { cid?: string }
-  ): Promise<boolean | string> {
+  async request(selfid: string, opts?: { cid?: string }): Promise<boolean | string> {
     let id = uuidv4()
 
     // Get user's device

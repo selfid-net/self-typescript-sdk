@@ -36,7 +36,6 @@ export default class FactsService {
   async request(
     selfid: string,
     facts: Fact[],
-    callback?: MessageProcessor,
     opts?: { cid?: string; exp_timeout?: BigInteger }
   ): Promise<FactResponse> {
     let id = uuidv4()
@@ -64,7 +63,6 @@ export default class FactsService {
   requestViaIntermediary(
     selfid: string,
     facts: Fact[],
-    callback: MessageProcessor,
     opts?: { cid?: string; exp_timeout?: BigInteger }
   ) {
     return true
