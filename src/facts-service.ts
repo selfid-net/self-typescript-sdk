@@ -92,11 +92,21 @@ export default class FactsService {
   }
 
   generateDeepLink(
+    callback: string,
     facts: Fact[],
-    callback: MessageProcessor,
     opts?: { selfid?: string; cid?: string }
-  ) {
-    return true
+  ): string {
+    let options = opts ? opts : {}
+    let selfid = options.selfid ? options.selfid : '-'
+    let body = this.jwt.toSignedJson(this.buildRequest(selfid, facts, options))
+    let encodedBody = this.jwt.encode(body)
+
+    if (this.env === '') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app`
+    } else if (this.env === 'development') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.dev`
+    }
+    return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
   }
 
   private buildRequest(selfid: string, facts: Fact[], opts?: { cid?: string; exp?: number }): any {
