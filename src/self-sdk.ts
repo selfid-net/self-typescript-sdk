@@ -50,7 +50,6 @@ export default class SelfSDK {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
     sdk.jwt = await Jwt.build(appID, appKey)
 
-    sdk.factsService = new FactsService()
     sdk.identityService = new IdentityService(sdk.jwt)
     sdk.ms = await Messaging.build(sdk.baseURL, sdk.jwt, sdk.identityService)
 
@@ -58,6 +57,7 @@ export default class SelfSDK {
 
     let options = opts ? opts : {}
     let env = options.env ? options.env : '-'
+    sdk.factsService = new FactsService(sdk.jwt, sdk.messagingService.ms, sdk.identityService, env)
     sdk.authenticationService = new AuthenticationService(
       sdk.jwt,
       sdk.messagingService.ms,
