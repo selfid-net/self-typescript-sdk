@@ -1,29 +1,35 @@
-import SelfSDK from '../src/self-sdk';
-import Fact from "../src/facts-service"
+import SelfSDK from '../src/self-sdk'
+import Fact from '../src/fact'
 
 /**
  * Facts service test
  */
 
-let sdk: SelfSDK;
+let sdk: SelfSDK
 
-describe("Facts service", () => {
-    beforeEach(async () => {
-        sdk = await SelfSDK.build( "109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random");
-    })
+describe('Facts service', () => {
+  beforeEach(async () => {
+    sdk = await SelfSDK.build(
+      '0f61af4946c11163a837d8bd8d2a9d05',
+      'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q',
+      'random'
+    )
+  })
 
-    afterEach(async () => {
-        sdk.jwt.stop()
-    })
+  afterEach(async () => {
+    sdk.stop()
+  })
 
-    it("request is truthy", () => {
-        let facts:Fact[] = []
-        let req = sdk.facts().request("myselfid", facts, () => {
-            console.log("called back")
-        })
-        expect(req).toBeTruthy()
-    })
+  it('request is truthy', async () => {
+    jest.setTimeout(30000000)
 
+    console.log('fact request')
+
+    let res = await sdk.facts().request('84099724068', [{ fact: 'phone_number' }])
+
+    console.log(res.attestationValuesFor('phone_number')[0])
+  })
+  /*
     it("request via intermediary is truthy", () => {
         let facts:Fact[] = []
         let req = sdk.facts().requestViaIntermediary("myselfid", facts, () => {
@@ -53,5 +59,5 @@ describe("Facts service", () => {
         })
         expect(req).toBeTruthy()
     })
-
+*/
 })

@@ -51,9 +51,33 @@ export default class IdentityService {
   }
 
   async publicKeys(selfid: string): Promise<PublicKey[]> {
-    let identity = await this.get(selfid)
+    let keys: any
 
-    return identity.publicKeys
+    try {
+      const axios = require('axios').default
+
+      const options = {
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      }
+
+      const response = await axios.get(
+        `https://api.review.selfid.net/v1/identities/${selfid}/public_keys`,
+        options
+      )
+      if (response.status === 200) {
+        console.log(response.data)
+        keys = response.data
+      } else if (response.status === 401) {
+        throw this.errUnauthorized
+      } else if (response.status === 404) {
+        throw this.errUnexistingIdentity
+      }
+    } catch (error) {
+      console.error(error)
+      throw this.errInternal
+    }
+
+    return keys
   }
 
   async get(selfid: string): Promise<Identity> {
