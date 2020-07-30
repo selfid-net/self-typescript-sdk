@@ -27,7 +27,7 @@ describe('Facts service', () => {
 
     let res = await sdk.facts().request('84099724068', [{ fact: 'phone_number' }])
 
-    console.log(res.facts[0].attestations[0].value)
+    console.log(res.attestationValuesFor('phone_number')[0])
   })
   /*
     it("request via intermediary is truthy", () => {

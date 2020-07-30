@@ -9,7 +9,7 @@ export default class Fact {
   sources?: string[]
   attestations?: Attestation[]
 
-  public static async parse(input, jwt: Jwt, is: IdentityService): Promise<Fact> {
+  public static async parse(input: any, jwt: Jwt, is: IdentityService): Promise<Fact> {
     let f = new Fact()
     f.fact = input.fact
     f.operator = input.operator

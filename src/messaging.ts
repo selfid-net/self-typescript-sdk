@@ -6,6 +6,7 @@ import { MsgType } from '../generated/msgtype_pb'
 import { Message } from '../generated/message_pb'
 import Attestation from './attestation'
 import Fact from './fact'
+import FactResponse from './fact-response'
 
 interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
@@ -120,28 +121,22 @@ export default class Messaging {
 
   private async processResponse(payload: any, typ: string) {
     let res = await this.buildResponse(payload)
+
     if (this.requests.has(payload.cid)) {
       let r = this.requests.get(payload.cid)
-      r.response = payload
+      r.response = res
       r.responded = true
       this.requests.set(payload.cid, r)
     } else if (this.callbacks.has(typ)) {
       let fn = this.callbacks.get(typ)
-      fn(payload)
+      fn(res)
     }
   }
 
   private async buildResponse(payload: any): Promise<any> {
-    if ('facts' in payload) {
-      let facts: Fact[] = []
-
-      const incomingFacts = payload.facts
-      payload.facts = []
-      for (const fact of incomingFacts) {
-        payload.facts.push(await Fact.parse(fact, this.jwt, this.is))
-      }
+    if (payload.typ === 'identities.facts.query.resp') {
+      return FactResponse.parse(payload, this.jwt, this.is)
     }
-
     return payload
   }
 
@@ -231,7 +226,6 @@ export default class Messaging {
     console.log('waiting for response')
     await this.wait_for_response(id)
     console.log('responded')
-    console.log(request.response)
 
     return request.response
   }

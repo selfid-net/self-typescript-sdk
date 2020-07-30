@@ -6,6 +6,7 @@ import Messaging from './messaging'
 import Fact from './fact'
 import { MsgType } from '../generated/msgtype_pb'
 import { Message } from '../generated/message_pb'
+import FactResponse from './fact-response'
 
 type MessageProcessor = (n: number) => any
 
@@ -29,7 +30,7 @@ export default class FactsService {
     facts: Fact[],
     callback?: MessageProcessor,
     opts?: { cid?: string; exp_timeout?: BigInteger }
-  ): Promise<any> {
+  ): Promise<FactResponse> {
     let id = uuidv4()
 
     // Get user's device
