@@ -60,12 +60,33 @@ export default class FactsService {
     return res
   }
 
-  requestViaIntermediary(
+  async requestViaIntermediary(
     selfid: string,
     facts: Fact[],
-    opts?: { cid?: string; exp_timeout?: BigInteger }
+    opts?: { cid?: string; exp_timeout?: BigInteger; intermediary?: string }
   ) {
-    return true
+    let id = uuidv4()
+
+    // Get intermediary's device
+    let options = opts ? opts : {}
+    let intermediary = options.intermediary ? options.intermediary : 'self_intermediary'
+    let devices = await this.is.devices(intermediary)
+
+    let j = this.buildRequest(selfid, facts, opts)
+    let ciphertext = this.jwt.prepare(j)
+
+    // Envelope
+    const msg = new Message()
+    msg.setType(MsgType.MSG)
+    msg.setId(id)
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    msg.setRecipient(`${intermediary}:${devices[0]}`)
+    msg.setCiphertext(ciphertext)
+
+    console.log('requesting ' + j.cid)
+    let res = await this.ms.request(j.cid, msg.serializeBinary())
+
+    return res
   }
 
   subscribe(callback: (n: any) => any) {

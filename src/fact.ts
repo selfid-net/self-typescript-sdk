@@ -5,7 +5,7 @@ import IdentityService from './identity-service'
 export default class Fact {
   fact: string
   operator?: string
-  expectedValue?: string
+  expected_value?: string
   sources?: string[]
   attestations?: Attestation[]
 
@@ -13,7 +13,7 @@ export default class Fact {
     let f = new Fact()
     f.fact = input.fact
     f.operator = input.operator
-    f.expectedValue = input.expected_value
+    f.expected_value = input.expected_value
 
     f.sources = []
     if ('sources' in input) {
