@@ -83,11 +83,11 @@ export default class AuthenticationService {
     let encodedBody = this.jwt.encode(body)
 
     if (this.env === '') {
-      return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app`
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app`
     } else if (this.env === 'development') {
-      return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app.dev`
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.dev`
     }
-    return `https://selfid.page.link/?link=${callback}%3Fqr=#{body}&apn=net.selfid.app.${this.env}`
+    return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
   }
 
   subscribe(callback: (n: any) => any) {

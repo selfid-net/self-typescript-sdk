@@ -23,11 +23,20 @@ describe('Facts service', () => {
   it('request is truthy', async () => {
     jest.setTimeout(30000000)
 
-    console.log('fact request')
+    sdk.facts().subscribe((res: any): any => {
+      console.log(res.attestationValuesFor('phone_number')[0])
+    })
 
-    let res = await sdk.facts().request('84099724068', [{ fact: 'phone_number' }])
+    // Generate a QR code to authenticate
+    let buf = sdk.facts().generateQR([{ fact: 'phone_number' }])
 
-    console.log(res.attestationValuesFor('phone_number')[0])
+    const fs = require('fs').promises
+    await fs.writeFile('/tmp/qr.png', buf)
+    console.log('Open /tmp/qr.png and scan it with your device')
+
+    // Wait til the response is received
+    const wait = seconds => new Promise(resolve => setTimeout(() => resolve(true), seconds * 1000))
+    await wait(30000)
   })
   /*
     it("request via intermediary is truthy", () => {

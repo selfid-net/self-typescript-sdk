@@ -1,4 +1,12 @@
 import { v4 as uuidv4 } from 'uuid'
+import {
+  QRCode,
+  ErrorCorrectLevel,
+  QRNumber,
+  QRAlphaNum,
+  QR8BitByte,
+  QRKanji
+} from 'qrcode-generator-ts/js'
 
 import IdentityService from './identity-service'
 import Jwt from './jwt'
@@ -62,20 +70,43 @@ export default class FactsService {
     return true
   }
 
-  subscribe(callback: MessageProcessor) {
-    return true
+  subscribe(callback: (n: any) => any) {
+    this.ms.subscribe('identities.facts.query.resp', callback)
   }
 
-  generateQR(facts: Fact[], opts?: { selfid?: string; cid?: string }) {
-    return true
+  generateQR(facts: Fact[], opts?: { selfid?: string; cid?: string }): Buffer {
+    let options = opts ? opts : {}
+    let selfid = options.selfid ? options.selfid : '-'
+    let body = this.jwt.toSignedJson(this.buildRequest(selfid, facts, options))
+
+    let qr = new QRCode()
+    qr.setTypeNumber(20)
+    qr.setErrorCorrectLevel(ErrorCorrectLevel.L)
+    qr.addData(body)
+    qr.make()
+
+    let data = qr.toDataURL(5).split(',')
+    let buf = Buffer.from(data[1], 'base64')
+
+    return buf
   }
 
   generateDeepLink(
+    callback: string,
     facts: Fact[],
-    callback: MessageProcessor,
     opts?: { selfid?: string; cid?: string }
-  ) {
-    return true
+  ): string {
+    let options = opts ? opts : {}
+    let selfid = options.selfid ? options.selfid : '-'
+    let body = this.jwt.toSignedJson(this.buildRequest(selfid, facts, options))
+    let encodedBody = this.jwt.encode(body)
+
+    if (this.env === '') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app`
+    } else if (this.env === 'development') {
+      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.dev`
+    }
+    return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
   }
 
   private buildRequest(selfid: string, facts: Fact[], opts?: { cid?: string; exp?: number }): any {
