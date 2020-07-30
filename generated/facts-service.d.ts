@@ -4,7 +4,7 @@ declare type MessageProcessor = (n: number) => any;
 export default interface Fact {
     name: string;
     operator: string;
-    expectedValue: string;
+    expected_value: string;
     sources: string[];
     attestations: Attestation[];
 }
