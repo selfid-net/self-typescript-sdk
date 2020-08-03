@@ -1,8 +1,9 @@
 import Jwt from '../src/jwt'
-import Attestation from '../src/attestation'
 import IdentityService from '../src/identity-service'
 import pks from './__fixtures__/pks'
 import at from './__fixtures__/attestation'
+import fact from './__fixtures__/fact'
+import Fact from '../src/fact'
 
 /**
  * Attestation test
@@ -33,7 +34,15 @@ describe('jwt', () => {
       data: pks
     })
 
-    let att = await Attestation.parse('phone_number', at, jwt, is)
+    let f = await Fact.parse(fact, jwt, is)
+
+    expect(f.fact).toEqual('phone_number')
+    expect(f.operator).toEqual('==')
+    expect(f.expected_value).toEqual('22')
+    expect(f.sources).toEqual(['passport'])
+    expect(f.attestations.length).toEqual(1)
+
+    let att = f.attestations[0]
     expect(att.verified).toBeTruthy()
     expect(att.to).toEqual('84099724068')
     expect(att.origin).toEqual('self_verification')
