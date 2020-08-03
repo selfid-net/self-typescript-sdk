@@ -55,7 +55,6 @@ export default class IdentityService {
 
     try {
       const axios = require('axios').default
-
       const options = {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
@@ -65,8 +64,7 @@ export default class IdentityService {
         options
       )
       if (response.status === 200) {
-        console.log(response.data)
-        keys = response.data
+        return response.data
       } else if (response.status === 401) {
         throw this.errUnauthorized
       } else if (response.status === 404) {

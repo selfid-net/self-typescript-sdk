@@ -1,5 +1,6 @@
 import Jwt from './jwt'
 import IdentityService from './identity-service'
+import { JwtInput } from './jwt'
 
 export default class Attestation {
   origin: string
@@ -14,7 +15,12 @@ export default class Attestation {
   factName: string
   value: string
 
-  public static async parse(name: string, input: any, jwt: Jwt, is: IdentityService): Promise<any> {
+  public static async parse(
+    name: string,
+    input: JwtInput,
+    jwt: Jwt,
+    is: IdentityService
+  ): Promise<any> {
     let payload = JSON.parse(Buffer.from(input.payload, 'base64').toString())
     let pks = await is.publicKeys(payload.iss)
 
