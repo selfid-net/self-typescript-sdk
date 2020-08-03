@@ -1,8 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
 import { NTPClient } from 'ntpclient'
-import json from 'rollup-plugin-json'
 
 const _sodium = require('libsodium-wrappers')
+
+export interface JwtInput {
+  protected: string
+  payload: string
+  signature: string
+}
 
 export default class Jwt {
   appID: string
@@ -20,18 +25,26 @@ export default class Jwt {
     this.deviceID = '1'
   }
 
-  public static async build(appID: string, appKey: string): Promise<Jwt> {
+  public static async build(appID: string, appKey: string, opts?: { ntp?: boolean }): Promise<Jwt> {
     let jwt = new Jwt()
     jwt.appID = appID
     jwt.appKey = appKey
 
-    await Promise.all([jwt.ntpsync(), _sodium.ready])
+    opts = opts ? opts : {}
+    let ntp = 'ntp' in opts ? opts.ntp : true
+
+    if (!ntp) {
+      await Promise.all([_sodium.ready])
+      jwt.diffDates = 0
+    } else {
+      await Promise.all([jwt.ntpsync(), _sodium.ready])
+      jwt.ntpSynchronization = setInterval(jwt.ntpsync, 50000)
+    }
 
     jwt.sodium = _sodium
 
     let seed = jwt.sodium.from_base64(jwt.appKey, jwt.sodium.base64_variants.ORIGINAL_NO_PADDING)
     jwt.keypair = jwt.sodium.crypto_sign_seed_keypair(seed)
-    jwt.ntpSynchronization = setInterval(jwt.ntpsync, 50000)
 
     return jwt
   }
@@ -80,7 +93,7 @@ export default class Jwt {
     return this.sodium.to_base64(signature, this.sodium.base64_variants.URLSAFE_NO_PADDING)
   }
 
-  public verify(input: any, pk: any): boolean {
+  public verify(input: JwtInput, pk: any): boolean {
     let msg = `${input.protected}.${input.payload}`
     let sig = this.sodium.from_base64(
       input.signature,
@@ -103,7 +116,7 @@ export default class Jwt {
     return new NTPClient({
       server: 'time.google.com',
       port: 123,
-      replyTimeout: 40 * 1000 // 40 seconds
+      replyTimeout: 10 * 1000 // 10 seconds
     })
       .getNetworkTime()
       .then(date => {
