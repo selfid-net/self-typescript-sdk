@@ -48,10 +48,10 @@ export default class SelfSDK {
     opts?: { baseURL?: string; messagingURL?: string; env?: string; autoReconnect?: boolean }
   ): Promise<SelfSDK> {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
-    sdk.jwt = await Jwt.build(appID, appKey)
+    sdk.jwt = await Jwt.build(appID, appKey, {})
 
     sdk.identityService = new IdentityService(sdk.jwt)
-    sdk.ms = await Messaging.build(sdk.baseURL, sdk.jwt, sdk.identityService)
+    sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService)
 
     sdk.messagingService = new MessagingService(sdk.jwt, sdk.identityService, sdk.ms)
 

@@ -25,7 +25,7 @@ describe('jwt', () => {
     jwt.stop()
   })
 
-  it('parses an attestation', async () => {
+  it('parses an facts', async () => {
     const axios = require('axios')
 
     jest.mock('axios')
@@ -49,5 +49,45 @@ describe('jwt', () => {
     expect(att.source).toEqual('user_specified')
     expect(att.factName).toEqual('phone_number')
     expect(att.value).toEqual('+441234567890')
+  })
+
+  it('parses an facts without sources', async () => {
+    const axios = require('axios')
+
+    jest.mock('axios')
+    axios.get.mockResolvedValue({
+      status: 200,
+      data: pks
+    })
+
+    let fct = { ...fact }
+    delete fct.sources
+    let f = await Fact.parse(fct, jwt, is)
+
+    expect(f.fact).toEqual('phone_number')
+    expect(f.operator).toEqual('==')
+    expect(f.expected_value).toEqual('22')
+    expect(f.sources).toEqual([])
+    expect(f.attestations.length).toEqual(1)
+  })
+
+  it('parses an facts without attestations', async () => {
+    const axios = require('axios')
+
+    jest.mock('axios')
+    axios.get.mockResolvedValue({
+      status: 200,
+      data: pks
+    })
+
+    let fct = { ...fact }
+    delete fct.attestations
+    let factWithoutAttestations = await Fact.parse(fct, jwt, is)
+
+    expect(factWithoutAttestations.fact).toEqual('phone_number')
+    expect(factWithoutAttestations.operator).toEqual('==')
+    expect(factWithoutAttestations.expected_value).toEqual('22')
+    expect(factWithoutAttestations.sources).toEqual(['passport'])
+    expect(factWithoutAttestations.attestations.length).toEqual(0)
   })
 })

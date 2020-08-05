@@ -4,11 +4,9 @@ import IdentityService from './identity-service'
 import { Auth } from '../generated/auth_pb'
 import { MsgType } from '../generated/msgtype_pb'
 import { Message } from '../generated/message_pb'
-import Attestation from './attestation'
-import Fact from './fact'
 import FactResponse from './fact-response'
 
-interface Request {
+export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
   acknowledged?: boolean
   waitForResponse?: boolean
@@ -26,7 +24,6 @@ export default class Messaging {
   is: IdentityService
 
   constructor(url: string, jwt: Jwt, is: IdentityService) {
-    console.log('creating messaging')
     this.jwt = jwt
     this.url = url
     this.requests = new Map()
@@ -34,88 +31,48 @@ export default class Messaging {
     this.connected = false
     this.is = is
 
-    const WebSocket = require('ws')
-    this.ws = new WebSocket('wss://messaging.review.selfid.net/v1/messaging')
-
-    this.ws.onopen = async () => {
-      this.connected = true
-    }
-
-    this.ws.onclose = () => {
-      console.log('disconnected')
-    }
-
-    this.ws.onmessage = async input => {
-      let msg = Message.deserializeBinary(input.data)
-      console.log(`received ${msg.getId()} (${msg.getType()})`)
-      switch (msg.getType()) {
-        case MsgType.ERR: {
-          console.log(`error processing ${msg.getId()}`)
-          console.log(msg)
-          break
-        }
-        case MsgType.ACK: {
-          console.log(`acknowledged ${msg.getId()}`)
-          this.mark_as_acknowledged(msg.getId())
-          break
-        }
-        case MsgType.ACL: {
-          console.log(`ACL ${msg.getId()}`)
-          this.processIncommingACL(msg.getId(), msg.getRecipient())
-          break
-        }
-        case MsgType.MSG: {
-          console.log(`message received ${msg.getId()}`)
-          await this.processIncommingMessage(msg)
-          break
-        }
-        default: {
-          console.log('invalid message')
-          break
-        }
-      }
+    if (this.url !== '') {
+      this.connect()
     }
   }
 
   public static async build(url: string, jwt: Jwt, is: IdentityService): Promise<Messaging> {
     let ms = new Messaging(url, jwt, is)
-    console.log('waiting for connection')
-    await ms.wait_for_connection()
 
-    console.log('connected')
-    await ms.authenticate()
-    console.log('authenticated')
+    await ms.setup()
 
     return ms
   }
 
-  private async processIncommingMessage(msg: Message) {
-    let ciphertext = JSON.parse(Buffer.from(msg.getCiphertext_asB64(), 'base64').toString())
-    let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+  private async setup() {
+    console.log('setting up')
+    await this.wait_for_connection()
+    await this.authenticate()
+  }
 
-    let pks = await this.is.publicKeys(payload.iss)
-    if (!this.jwt.verify(ciphertext, pks[0].key)) {
-      console.log('unverified message ' + payload.cid)
-      return
-    }
+  private async processIncommingMessage(input: string) {
+    try {
+      let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
+      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
 
-    switch (payload.typ) {
-      case 'identities.facts.query.req': {
-        console.log('incoming fact request')
-        break
+      let pks = await this.is.publicKeys(payload.iss)
+      if (!this.jwt.verify(ciphertext, pks[0].key)) {
+        console.log('unverified message ' + payload.cid)
+        return
       }
-      case 'identities.facts.query.resp': {
-        await this.processResponse(payload, 'identities.facts.query.resp')
-        break
+
+      switch (payload.typ) {
+        case 'identities.facts.query.resp': {
+          await this.processResponse(payload, 'identities.facts.query.resp')
+          break
+        }
+        case 'identities.authenticate.resp': {
+          await this.processResponse(payload, 'identities.authenticate.resp')
+          break
+        }
       }
-      case 'identities.authenticate.resp': {
-        await this.processResponse(payload, 'identities.authenticate.resp')
-        break
-      }
-      case 'identities.authenticate.req': {
-        console.log('incoming authentication request')
-        break
-      }
+    } catch (error) {
+      console.log('skipping message')
     }
   }
 
@@ -141,11 +98,10 @@ export default class Messaging {
   }
 
   private processIncommingACL(id: string, msg: string) {
-    console.log('processing acl response')
     let list = JSON.parse(msg)
     let req = this.requests.get(id)
     if (!req) {
-      console.log('ACL request not found')
+      console.debug(`ACL request not found ${id}`)
       return
     }
 
@@ -153,8 +109,6 @@ export default class Messaging {
     req.responded = true
     req.acknowledged = true // acls list does not respond with ACK
     this.requests.set(id, req)
-
-    console.log('acl response processed')
   }
 
   close() {
@@ -162,12 +116,52 @@ export default class Messaging {
   }
 
   private connect() {
-    const WebSocket = require('ws')
-    this.ws = new WebSocket('wss://messaging.review.selfid.net/v1/messaging')
+    if (this.ws === undefined) {
+      const WebSocket = require('ws')
+      this.ws = new WebSocket(this.url)
+    }
+
+    this.ws.onopen = async () => {
+      this.connected = true
+    }
+
+    this.ws.onclose = () => {
+      this.connected = false
+    }
+
+    this.ws.onmessage = async input => {
+      let msg = Message.deserializeBinary(input.data)
+      console.log(`received ${msg.getId()} (${msg.getType()})`)
+      switch (msg.getType()) {
+        case MsgType.ERR: {
+          console.log(`error processing ${msg.getId()}`)
+          console.log(msg)
+          break
+        }
+        case MsgType.ACK: {
+          console.log(`acknowledged ${msg.getId()}`)
+          this.mark_as_acknowledged(msg.getId())
+          break
+        }
+        case MsgType.ACL: {
+          console.log(`ACL ${msg.getId()}`)
+          this.processIncommingACL(msg.getId(), msg.getRecipient())
+          break
+        }
+        case MsgType.MSG: {
+          console.log(`message received ${msg.getId()}`)
+          await this.processIncommingMessage(msg.getCiphertext_asB64())
+          break
+        }
+        default: {
+          console.log('invalid message')
+          break
+        }
+      }
+    }
   }
 
   private async authenticate() {
-    console.log('authenticating')
     let token = this.jwt.authToken()
 
     const msg = new Auth()
@@ -191,10 +185,7 @@ export default class Messaging {
     if (!request.responded) {
       request.responded = false
     }
-    console.log(' -> sent ' + id)
     this.send(id, request)
-
-    console.log(' -> waiting for ' + id)
     return this.wait(id, request)
   }
 

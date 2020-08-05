@@ -94,14 +94,18 @@ export default class Jwt {
   }
 
   public verify(input: JwtInput, pk: any): boolean {
-    let msg = `${input.protected}.${input.payload}`
-    let sig = this.sodium.from_base64(
-      input.signature,
-      this.sodium.base64_variants.URLSAFE_NO_PADDING
-    )
-    let key = this.sodium.from_base64(pk, this.sodium.base64_variants.ORIGINAL_NO_PADDING)
+    try {
+      let msg = `${input.protected}.${input.payload}`
+      let sig = this.sodium.from_base64(
+        input.signature,
+        this.sodium.base64_variants.URLSAFE_NO_PADDING
+      )
+      let key = this.sodium.from_base64(pk, this.sodium.base64_variants.ORIGINAL_NO_PADDING)
 
-    return this.sodium.crypto_sign_verify_detached(sig, msg, key)
+      return this.sodium.crypto_sign_verify_detached(sig, msg, key)
+    } catch (error) {
+      return false
+    }
   }
 
   public now() {
@@ -116,7 +120,7 @@ export default class Jwt {
     return new NTPClient({
       server: 'time.google.com',
       port: 123,
-      replyTimeout: 10 * 1000 // 10 seconds
+      replyTimeout: 40 * 1000 // 10 seconds
     })
       .getNetworkTime()
       .then(date => {
