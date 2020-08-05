@@ -115,13 +115,41 @@ export default class Messaging {
     this.ws.close()
   }
 
+  private async onmessage(msg: Message) {
+    console.log(`received ${msg.getId()} (${msg.getType()})`)
+    switch (msg.getType()) {
+      case MsgType.ERR: {
+        console.log(`error processing ${msg.getId()}`)
+        console.log(msg)
+        break
+      }
+      case MsgType.ACK: {
+        console.log(`acknowledged ${msg.getId()}`)
+        this.mark_as_acknowledged(msg.getId())
+        break
+      }
+      case MsgType.ACL: {
+        console.log(`ACL ${msg.getId()}`)
+        this.processIncommingACL(msg.getId(), msg.getRecipient())
+        break
+      }
+      case MsgType.MSG: {
+        console.log(`message received ${msg.getId()}`)
+        await this.processIncommingMessage(msg.getCiphertext_asB64())
+        break
+      }
+    }
+  }
+
+  /* istanbul ignore next */
   private connect() {
+    console.log('configuring ws')
     if (this.ws === undefined) {
       const WebSocket = require('ws')
       this.ws = new WebSocket(this.url)
     }
 
-    this.ws.onopen = async () => {
+    this.ws.onopen = () => {
       this.connected = true
     }
 
@@ -131,33 +159,7 @@ export default class Messaging {
 
     this.ws.onmessage = async input => {
       let msg = Message.deserializeBinary(input.data)
-      console.log(`received ${msg.getId()} (${msg.getType()})`)
-      switch (msg.getType()) {
-        case MsgType.ERR: {
-          console.log(`error processing ${msg.getId()}`)
-          console.log(msg)
-          break
-        }
-        case MsgType.ACK: {
-          console.log(`acknowledged ${msg.getId()}`)
-          this.mark_as_acknowledged(msg.getId())
-          break
-        }
-        case MsgType.ACL: {
-          console.log(`ACL ${msg.getId()}`)
-          this.processIncommingACL(msg.getId(), msg.getRecipient())
-          break
-        }
-        case MsgType.MSG: {
-          console.log(`message received ${msg.getId()}`)
-          await this.processIncommingMessage(msg.getCiphertext_asB64())
-          break
-        }
-        default: {
-          console.log('invalid message')
-          break
-        }
-      }
+      await this.onmessage(msg)
     }
   }
 

@@ -321,21 +321,53 @@ describe('jwt', () => {
     })
   })
 
-  /*
-  describe('connect', () =>{
-    it('happy path', async() => {
-      const fakeURL = 'ws://localhost:8080';
-      const mockServer = new Server(fakeURL);
+  describe('onmessage', () => {
+    it('type error', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-      ms.ws = new WebSocket(fakeURL)
+      let msg = new Message()
+      msg.setId('cid')
+      msg.setType(MsgType.ERR)
+      await ms['onmessage'](msg)
 
-      expect(ms.connected).toBeFalsy()
-      ms['connect']()
-      expect(ms.connected).toBeTruthy()
+      expect(consoleSpy).toHaveBeenCalledWith('error processing cid')
+    })
 
+    it('type acknowledge', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
-      mockServer.close()
+      let msg = new Message()
+      msg.setId('cid')
+      msg.setType(MsgType.ACK)
+      await ms['onmessage'](msg)
+
+      expect(consoleSpy).toHaveBeenCalledWith('acknowledged cid')
+    })
+
+    it('type ACL', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+      let msg = new Message()
+      msg.setId('cid')
+      msg.setType(MsgType.ACL)
+      try {
+        await ms['onmessage'](msg)
+      } catch (error) {
+        expect(consoleSpy).toHaveBeenCalledWith('ACL cid')
+      }
+    })
+
+    it('type MSG', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+      let msg = new Message()
+      msg.setId('cid')
+      msg.setType(MsgType.MSG)
+      try {
+        await ms['onmessage'](msg)
+      } catch (error) {
+        expect(consoleSpy).toHaveBeenCalledWith('message received cid')
+      }
     })
   })
-  */
 })
