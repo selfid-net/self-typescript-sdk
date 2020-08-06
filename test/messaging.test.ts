@@ -4,7 +4,6 @@ import Messaging from '../src/messaging'
 import { WebSocket, Server } from 'mock-socket'
 import { Message } from '../generated/message_pb'
 import { MsgType } from '../generated/msgtype_pb'
-import { Request } from '../src/messaging'
 
 /**
  * Attestation test

@@ -9,7 +9,7 @@ import {
 } from 'qrcode-generator-ts/js'
 
 import Jwt from './jwt'
-import IdentityService from '../generated/identity-service'
+import IdentityService from './identity-service'
 import Messaging from './messaging'
 
 import { MsgType } from '../generated/msgtype_pb'
