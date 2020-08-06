@@ -201,7 +201,7 @@ export default class Messaging {
     })
   }
 
-  private send(id: string, request: Request) {
+  send(id: string, request: Request) {
     this.ws.send(request.data)
 
     this.requests.set(id, request)

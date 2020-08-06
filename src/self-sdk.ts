@@ -53,7 +53,7 @@ export default class SelfSDK {
     sdk.identityService = new IdentityService(sdk.jwt)
     sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService)
 
-    sdk.messagingService = new MessagingService(sdk.jwt, sdk.identityService, sdk.ms)
+    sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms)
 
     let options = opts ? opts : {}
     let env = options.env ? options.env : '-'

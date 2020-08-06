@@ -7,6 +7,7 @@ import Messaging from './messaging'
 import { AccessControlList } from '../generated/acl_pb'
 import { MsgType } from '../generated/msgtype_pb'
 import { ACLCommand } from '../generated/aclcommand_pb'
+import { Message } from '../generated/message_pb'
 
 export interface Request {
   [details: string]: any
@@ -18,20 +19,20 @@ export interface ACLRule {
 
 export default class MessagingService {
   is: IdentityService
-  ms: any
+  ms: Messaging
   jwt: Jwt
 
-  constructor(jwt: Jwt, is: IdentityService, ms: Messaging) {
+  constructor(jwt: Jwt, ms: Messaging, is: IdentityService) {
     this.jwt = jwt
-    this.is = is
     this.ms = ms
+    this.is = is
   }
 
   subscribe(type: string, callback: any) {
-    return true
+    this.ms.subscribe(type, callback)
   }
 
-  async permitConnection(selfid: string): Promise<boolean> {
+  async permitConnection(selfid: string): Promise<boolean | Response> {
     console.log('permitting connection')
     let someYears = 999 * 365 * 24 * 60 * 60 * 1000
     let exp = new Date(Math.floor(this.jwt.now() + someYears))
@@ -72,7 +73,7 @@ export default class MessagingService {
     return connections
   }
 
-  async revokeConnection(selfid: string): Promise<boolean> {
+  async revokeConnection(selfid: string): Promise<boolean | Response> {
     console.log('revoking connection')
 
     let payload = this.jwt.prepare({
@@ -92,11 +93,37 @@ export default class MessagingService {
     return '1'
   }
 
-  send(recipient: string, request: Request): boolean {
-    return true
+  async send(recipient: string, request: Request): Promise<void> {
+    // Calculate expirations
+    let iat = new Date(Math.floor(this.jwt.now()))
+    let exp = new Date(Math.floor(this.jwt.now() + 300000 * 60))
+
+    request['jti'] = uuidv4()
+    request['iss'] = this.jwt.appID
+    request['sub'] = recipient
+    request['iat'] = iat.toISOString()
+    request['exp'] = exp.toISOString()
+    request['cid'] = uuidv4()
+
+    const msg = new Message()
+
+    msg.setType(MsgType.MSG)
+    msg.setId(uuidv4())
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+
+    let devices = await this.is.devices(recipient)
+    msg.setRecipient(`${recipient}:${devices[0]}`)
+
+    let ciphertext = this.jwt.prepare(request)
+    msg.setCiphertext(ciphertext)
+
+    this.ms.send(recipient, { data: msg.serializeBinary() })
   }
 
-  notify(recipient: string, message: string): boolean {
-    return true
+  async notify(recipient: string, message: string): Promise<void> {
+    await this.send(recipient, {
+      typ: 'identities.notify',
+      description: message
+    })
   }
 }
