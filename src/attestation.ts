@@ -9,7 +9,7 @@ export default class Attestation {
   source: string
   verified: boolean
   sub: string
-  expected_value: string
+  expectedValue: string
   operator: string
   factName: string
   value: string
@@ -24,7 +24,7 @@ export default class Attestation {
     a.origin = payload.iss
     a.aud = payload.aud
     a.source = payload.source
-    a.expected_value = payload.expected_value
+    a.expectedValue = payload.expected_value
     a.operator = payload.operator
     a.factName = name
     a.verified = jwt.verify(input, pks[0].key)
