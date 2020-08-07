@@ -13,7 +13,7 @@
   "author": "Adrià Cidre <593270+adriacidre@users.noreply.github.com>",
   "repository": {
     "type": "git",
-    "url": "git@github.com:selfid-net/self-js-sdk.git"
+    "url": "git@github.com:selfid-net/self-typescript-sdk.git"
   },
   "license": "MIT",
   "engines": {
@@ -22,7 +22,10 @@
   "scripts": {
     "lint": "tslint  --project tsconfig.json -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
-    "build": "tsc --module commonjs && rollup -c rollup.config.ts && typedoc --out docs --target es6 --theme minimal --mode file src",
+    "transpile": "tsc --module commonjs",
+    "roll": "rollup -c rollup.config.ts",
+    "doc": "NODE_OPTIONS=--max_old_space_size=8192 typedoc --out docs --target es6 --theme minimal --mode file src",
+    "build": "tsc --module commonjs && rollup -c rollup.config.ts && NODE_OPTIONS=--max_old_space_size=8192 typedoc --out docs --target es6 --theme minimal --mode file src",
     "start": "rollup -c rollup.config.ts -w",
     "test": "jest --coverage",
     "test:watch": "jest --coverage --watch",
@@ -63,7 +66,7 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 90,
+        "branches": 85,
         "functions": 95,
         "lines": 95,
         "statements": 95
@@ -127,6 +130,7 @@
     "axios": "^0.19.2",
     "google-protobuf": "^4.0.0-rc.1",
     "libsodium-wrappers": "^0.7.6",
+    "mock-socket": "^9.0.3",
     "ntpclient": "^1.0.2",
     "qrcode-generator-ts": "0.0.4",
     "self-protos": "file:./generated/",

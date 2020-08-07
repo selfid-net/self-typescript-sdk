@@ -1,74 +1,221 @@
-import SelfSDK from '../src/self-sdk';
-import MessagingService from "../src/messaging-service"
+import Jwt from '../src/jwt'
+import IdentityService from '../src/identity-service'
+import Messaging from '../src/messaging'
+import FactsService from '../src/facts-service'
 
-/**
- * Messaging service test
- */
+import { WebSocket, Server } from 'mock-socket'
+import { Message } from '../generated/message_pb'
+import { MsgType } from '../generated/msgtype_pb'
+import MessagingService from '../src/messaging-service'
+import { AccessControlList } from '../generated/acl_pb'
+import { ACLCommand } from '../generated/aclcommand_pb'
 
-let sdk: SelfSDK;
+describe('Messaging service', () => {
+  let mss: MessagingService
+  let jwt: Jwt
+  let ms: Messaging
+  let mockServer: Server
 
-describe("Messaging service", () => {
-    beforeEach(async () => {
-        sdk = await SelfSDK.build( "109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random");
+  beforeEach(async () => {
+    let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
+    let sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    jwt = await Jwt.build('appID', sk, { ntp: false })
+
+    let is = new IdentityService(jwt)
+
+    const fakeURL = 'ws://localhost:8080'
+    mockServer = new Server(fakeURL)
+
+    ms = new Messaging('', jwt, is)
+    ms.ws = new WebSocket(fakeURL)
+    ms.connected = true
+
+    mss = new MessagingService(jwt, ms, is)
+  })
+
+  afterEach(async () => {
+    jwt.stop()
+    mockServer.close()
+  })
+
+  describe('MessagingService::permitConnection', () => {
+    it('happy path', async () => {
+      const msMock = jest.spyOn(ms, 'send_and_wait').mockImplementation(
+        (cid: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(cid.length).toEqual(36)
+          // The cid is automatically generated
+          let msg = AccessControlList.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.ACL)
+          expect(msg.getCommand()).toEqual(ACLCommand.PERMIT)
+
+          // Check ciphertext
+          let input = msg.getPayload_asB64()
+          let j = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(j['payload'], 'base64').toString())
+
+          expect(payload.iss).toEqual('appID')
+          expect(payload.acl_source).toEqual('selfid')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      let res = await mss.permitConnection('selfid')
+      expect(res).toBeTruthy()
     })
+  })
 
-    afterEach(async () => {
-        sdk.stop()
+  describe('MessagingService::revokeConnection', () => {
+    it('happy path', async () => {
+      const msMock = jest.spyOn(ms, 'send_and_wait').mockImplementation(
+        (cid: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(cid.length).toEqual(36)
+          // The cid is automatically generated
+          let msg = AccessControlList.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.ACL)
+          expect(msg.getCommand()).toEqual(ACLCommand.REVOKE)
+
+          // Check ciphertext
+          let input = msg.getPayload_asB64()
+          let j = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(j['payload'], 'base64').toString())
+
+          expect(payload.iss).toEqual('appID')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      let res = await mss.revokeConnection('selfid')
+      expect(res).toBeTruthy()
     })
+  })
 
-    it("subscribe is truthy", async() => {
-        console.log("initialized")
-        console.log("permitting")
-        let success = await sdk.messaging().permitConnection("35918759412")
-        expect(success).toBeTruthy()
-        console.log("permitted")
+  describe('MessagingService::allowedConnections', () => {
+    it('happy path', async () => {
+      const msMock = jest.spyOn(ms, 'request').mockImplementation(
+        (cid: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(cid.length).toEqual(36)
+          // The cid is automatically generated
+          let msg = AccessControlList.deserializeBinary(data.valueOf() as Uint8Array)
 
-        let connections = await sdk.messaging().allowedConnections()
-        console.log(connections)
-        expect(Object.keys(connections).length).toEqual(2)
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.ACL)
+          expect(msg.getCommand()).toEqual(ACLCommand.LIST)
 
-        success = await sdk.messaging().revokeConnection("35918759412")
-        expect(success).toBeTruthy()
-        console.log("revoked")
+          return new Promise(resolve => {
+            resolve([{ acl_source: 'source', acl_exp: 'xxxx' }])
+          })
+        }
+      )
+
+      let res = await mss.allowedConnections()
+      expect(res['source']).toEqual('xxxx')
     })
+  })
 
-    /*
-    it("subscribe is truthy", () => {
-        let req = sdk.messaging().subscribe("my.message.type", () => {
-            console.log("called back")
+  describe('MessagingService::subscribe', () => {
+    it('happy path', async () => {
+      const msMock = jest
+        .spyOn(ms, 'subscribe')
+        .mockImplementation((messageType: string, callback: (n: any) => any) => {
+          expect(messageType).toEqual('test')
         })
-        expect(req).toBeTruthy()
-    })
 
-    it("permitting connections is truthy", () => {
-        let req = sdk.messaging().permitConnection("myselfid")
-        expect(req).toBeTruthy()
+      expect(ms.subscribe('test', (n: any): any => {})).toBeUndefined()
     })
+  })
 
-    it("revoking connections is truthy", () => {
-        let req = sdk.messaging().revokeConnection("myselfid")
-        expect(req).toBeTruthy()
+  describe('MessagingService::send', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      const msMock = jest.spyOn(ms, 'send').mockImplementation(
+        (recipient: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(recipient).toEqual('selfid')
+          // The cid is automatically generated
+          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.MSG)
+
+          // Check ciphertext
+          let input = msg.getCiphertext_asB64()
+          let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+          expect(payload.jti.length).toEqual(36)
+          expect(payload.cid.length).toEqual(36)
+          expect(payload.iss).toEqual('appID')
+          expect(payload.sub).toEqual('selfid')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      await mss.send('selfid', {})
     })
+  })
 
-    it("listing connections is empty", () => {
-        let conns = sdk.messaging().allowedConnections()
-        expect(conns.length).toBe(0)
+  describe('MessagingService::notify', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      const msMock = jest.spyOn(ms, 'send').mockImplementation(
+        (recipient: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(recipient).toEqual('selfid')
+          // The cid is automatically generated
+          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.MSG)
+
+          // Check ciphertext
+          let input = msg.getCiphertext_asB64()
+          let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+          expect(payload.jti.length).toEqual(36)
+          expect(payload.cid.length).toEqual(36)
+          expect(payload.iss).toEqual('appID')
+          expect(payload.sub).toEqual('selfid')
+          expect(payload.description).toEqual('hello world!')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      await mss.notify('selfid', 'hello world!')
     })
-
-    it("deviceID is a string", () => {
-        let req = sdk.messaging().deviceID()
-        expect(req).toBe("1")
-    })
-
-    it("send is truthy", () => {
-        let req = sdk.messaging().send("myselfid", {"some": "thing"})
-        expect(req).toBeTruthy()
-    })
-
-    it("notify is truthy", () => {
-        let req = sdk.messaging().notify("myselfid", "some message")
-        expect(req).toBeTruthy()
-    })
-    */
-
+  })
 })

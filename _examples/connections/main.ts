@@ -1,4 +1,4 @@
-import SelfSDK from '../../dist/lib/self-sdk.js'
+import SelfSDK from '../../src/self-sdk.js'
 import { exit } from 'process';
 
 async function manageConnections(appID: string, appSecret: string, connection: string) {

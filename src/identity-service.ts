@@ -23,6 +23,7 @@ export default class IdentityService {
 
   async devices(selfid: string): Promise<string[]> {
     let devices: string[] = []
+    let response: any
 
     try {
       const axios = require('axios').default
@@ -31,20 +32,21 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      const response = await axios.get(
+      // TODO change this hardcoded url by this.url
+      response = await axios.get(
         `https://api.review.selfid.net/v1/identities/${selfid}/devices`,
         options
       )
-      if (response.status === 200) {
-        devices = response.data
-      } else if (response.status === 401) {
-        throw this.errUnauthorized
-      } else if (response.status === 404) {
-        throw this.errUnexistingIdentity
-      }
     } catch (error) {
-      console.error(error)
       throw this.errInternal
+    }
+
+    if (response.status === 200) {
+      devices = response.data
+    } else if (response.status === 401) {
+      throw this.errUnauthorized
+    } else if (response.status === 404) {
+      throw this.errUnexistingIdentity
     }
 
     return devices
@@ -52,29 +54,28 @@ export default class IdentityService {
 
   async publicKeys(selfid: string): Promise<PublicKey[]> {
     let keys: any
+    let response: any
 
     try {
       const axios = require('axios').default
-
       const options = {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      const response = await axios.get(
+      response = await axios.get(
         `https://api.review.selfid.net/v1/identities/${selfid}/public_keys`,
         options
       )
-      if (response.status === 200) {
-        console.log(response.data)
-        keys = response.data
-      } else if (response.status === 401) {
-        throw this.errUnauthorized
-      } else if (response.status === 404) {
-        throw this.errUnexistingIdentity
-      }
     } catch (error) {
-      console.error(error)
       throw this.errInternal
+    }
+
+    if (response.status === 200) {
+      return response.data
+    } else if (response.status === 401) {
+      throw this.errUnauthorized
+    } else if (response.status === 404) {
+      throw this.errUnexistingIdentity
     }
 
     return keys
@@ -82,6 +83,7 @@ export default class IdentityService {
 
   async get(selfid: string): Promise<Identity> {
     let identity: any
+    let response: any
 
     try {
       const axios = require('axios').default
@@ -90,23 +92,19 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      const response = await axios.get(
-        `https://api.review.selfid.net/v1/identities/${selfid}`,
-        options
-      )
-      if (response.status === 200) {
-        console.log(response.data)
-        identity = response.data
-        identity.publicKeys = response.data.public_keys
-        delete identity.public_keys
-      } else if (response.status === 401) {
-        throw this.errUnauthorized
-      } else if (response.status === 404) {
-        throw this.errUnexistingIdentity
-      }
+      response = await axios.get(`https://api.review.selfid.net/v1/identities/${selfid}`, options)
     } catch (error) {
-      console.error(error)
       throw this.errInternal
+    }
+
+    if (response.status === 200) {
+      identity = response.data
+      identity.publicKeys = response.data.public_keys
+      delete identity.public_keys
+    } else if (response.status === 401) {
+      throw this.errUnauthorized
+    } else if (response.status === 404) {
+      throw this.errUnexistingIdentity
     }
 
     return identity

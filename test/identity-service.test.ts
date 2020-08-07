@@ -1,34 +1,204 @@
-import SelfSDK from '../src/self-sdk';
-import IdentityService from "../src/identity-service"
+import Jwt from '../src/jwt'
+import IdentityService from '../src/identity-service'
+import pks from './__fixtures__/pks'
 
 /**
- * Identity service test
+ * Attestation test
  */
+describe('jwt', () => {
+  let jwt: Jwt
+  let pk: any
+  let sk: any
+  let is: IdentityService
 
-let sdk: SelfSDK;
+  beforeEach(async () => {
+    pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
+    sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    jwt = await Jwt.build('appID', sk, { ntp: false })
+    is = new IdentityService(jwt)
+  })
 
-describe("Identity service", () => {
-    beforeEach(async () => {
-        sdk = await SelfSDK.build( "109a21fdd1bfaffa2717be1b4edb57e9", "RmfQdahde0n5SSk1iF4qA2xFbm116RNjjZe47Swn1s4", "random");
+  afterEach(async () => {
+    jwt.stop()
+  })
+
+  describe('IdentityService::devices', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      let devices = await is.devices('selfid')
+      expect(devices.length).toEqual(1)
+      expect(devices[0]).toEqual('deviceID')
     })
 
-    afterEach(async () => {
-        sdk.jwt.stop()
+    it('unauthorized response', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 401,
+        data: []
+      })
+
+      try {
+        await is.devices('selfid')
+      } catch (e) {
+        expect(e.message).toBe("you're not authorized to interact with this identity")
+      }
     })
 
-    it("identity devices", async() => {
-        let devices = await sdk.identity().devices("35918759412")
-        console.log(devices)
+    it('not found identity', async () => {
+      const axios = require('axios')
 
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 404,
+        data: pks
+      })
+
+      try {
+        await is.devices('selfid')
+      } catch (e) {
+        expect(e.message).toBe('identity does not exist')
+      }
     })
 
-    it("identity public keys", async() => {
-        let pks = await sdk.identity().publicKeys("35918759412")
-        console.log(pks)
+    it('internal error', async () => {
+      const axios = require('axios')
+      jest.spyOn(axios, 'get').mockRejectedValue(new Error('error'))
+
+      try {
+        await is.devices('selfid')
+      } catch (e) {
+        expect(e.message).toBe('internal error')
+      }
+    })
+  })
+
+  describe('IdentityService::publicKeys', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: pks
+      })
+
+      let publicKeys = await is.publicKeys('selfid')
+      expect(publicKeys.length).toEqual(1)
+      expect(publicKeys[0].id).toEqual(0)
+      expect(publicKeys[0].key).toEqual(pks[0].key)
     })
 
-    it("get is truthy", async() => {
-        let identity = await sdk.identity().get("35918759412")
-        console.log(identity)
+    it('unauthorized response', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 401,
+        data: pks
+      })
+
+      try {
+        await is.publicKeys('selfid')
+      } catch (e) {
+        expect(e.message).toBe("you're not authorized to interact with this identity")
+      }
     })
+
+    it('not found identity', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 404,
+        data: pks
+      })
+
+      try {
+        await is.publicKeys('selfid')
+      } catch (e) {
+        expect(e.message).toBe('identity does not exist')
+      }
+    })
+
+    it('internal error', async () => {
+      const axios = require('axios')
+      jest.spyOn(axios, 'get').mockRejectedValue(new Error('error'))
+
+      try {
+        await is.publicKeys('selfid')
+      } catch (e) {
+        expect(e.message).toBe('internal error')
+      }
+    })
+  })
+
+  describe('IdentityService::get', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: { id: '1112223334', public_keys: pks }
+      })
+
+      let identity = await is.get('selfid')
+      expect(identity.id).toEqual('1112223334')
+      expect(identity.publicKeys.length).toEqual(1)
+      expect(identity.publicKeys[0].id).toEqual(0)
+      expect(identity.publicKeys[0].key).toEqual(pks[0].key)
+    })
+
+    it('unauthorized response', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 401,
+        data: { id: '1112223334', public_keys: pks }
+      })
+
+      try {
+        await is.get('selfid')
+      } catch (e) {
+        expect(e.message).toBe("you're not authorized to interact with this identity")
+      }
+    })
+
+    it('not found identity', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 404,
+        data: { id: '1112223334', public_keys: pks }
+      })
+
+      try {
+        await is.get('selfid')
+      } catch (e) {
+        expect(e.message).toBe('identity does not exist')
+      }
+    })
+
+    it('internal error', async () => {
+      const axios = require('axios')
+      jest.spyOn(axios, 'get').mockRejectedValue(new Error('error'))
+
+      try {
+        await is.get('selfid')
+      } catch (e) {
+        expect(e.message).toBe('internal error')
+      }
+    })
+  })
 })
