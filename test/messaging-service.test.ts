@@ -139,4 +139,83 @@ describe('Messaging service', () => {
       expect(ms.subscribe('test', (n: any): any => {})).toBeUndefined()
     })
   })
+
+  describe('MessagingService::send', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      const msMock = jest.spyOn(ms, 'send').mockImplementation(
+        (recipient: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(recipient).toEqual('selfid')
+          // The cid is automatically generated
+          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.MSG)
+
+          // Check ciphertext
+          let input = msg.getCiphertext_asB64()
+          let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+          expect(payload.jti.length).toEqual(36)
+          expect(payload.cid.length).toEqual(36)
+          expect(payload.iss).toEqual('appID')
+          expect(payload.sub).toEqual('selfid')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      await mss.send('selfid', {})
+    })
+  })
+
+  describe('MessagingService::notify', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      const msMock = jest.spyOn(ms, 'send').mockImplementation(
+        (recipient: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(recipient).toEqual('selfid')
+          // The cid is automatically generated
+          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.MSG)
+
+          // Check ciphertext
+          let input = msg.getCiphertext_asB64()
+          let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
+          let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+          expect(payload.jti.length).toEqual(36)
+          expect(payload.cid.length).toEqual(36)
+          expect(payload.iss).toEqual('appID')
+          expect(payload.sub).toEqual('selfid')
+          expect(payload.description).toEqual('hello world!')
+
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
+      await mss.notify('selfid', 'hello world!')
+    })
+  })
 })
