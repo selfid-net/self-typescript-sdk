@@ -15,6 +15,7 @@ describe('AuthenticationService', () => {
   let jwt: Jwt
   let ms: Messaging
   let mockServer: Server
+  let URL = require('url').URL
 
   beforeEach(async () => {
     let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
