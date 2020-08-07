@@ -1,6 +1,6 @@
 import Jwt from './jwt'
 import IdentityService from './identity-service'
-import { JwtInput } from './jwt'
+import JwtInput from './jwt'
 
 export default class Attestation {
   origin: string

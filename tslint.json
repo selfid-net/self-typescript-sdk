@@ -4,8 +4,11 @@
     "tslint-config-prettier"
   ],
   "rules": {
+    "no-duplicate-imports": [false],
     "variable-name": [
       true,
+      "allow-snake-case",
+      "allow-pascal-case",
       "allow-leading-underscore"
     ]
   }
