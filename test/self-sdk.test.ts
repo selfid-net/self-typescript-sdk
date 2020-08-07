@@ -16,7 +16,7 @@ describe('SelfSDK test', () => {
   beforeEach(async () => {
     sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
 
-    sdk = await SelfSDK.build('appID', sk, 'random', { messagingURL: '' })
+    sdk = await SelfSDK.build('appID', sk, 'random', { messagingURL: '', ntp: false })
   })
 
   afterEach(async () => {

@@ -30,14 +30,20 @@ export default class Jwt {
     jwt.appID = appID
     jwt.appKey = appKey
 
+    /* istanbul ignore next */
     opts = opts ? opts : {}
+
+    /* istanbul ignore next */
     let ntp = 'ntp' in opts ? opts.ntp : true
 
+    /* istanbul ignore next */
     if (!ntp) {
       await Promise.all([_sodium.ready])
       jwt.diffDates = 0
     } else {
+      /* istanbul ignore next */
       await Promise.all([jwt.ntpsync(), _sodium.ready])
+      /* istanbul ignore next */
       jwt.ntpSynchronization = setInterval(jwt.ntpsync, 50000)
     }
 
@@ -116,6 +122,7 @@ export default class Jwt {
     clearInterval(this.ntpSynchronization)
   }
 
+  /* istanbul ignore next */
   private async ntpsync(): Promise<void | Date> {
     return new NTPClient({
       server: 'time.google.com',

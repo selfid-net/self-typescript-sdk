@@ -170,12 +170,66 @@ describe('AuthenticationService', () => {
       expect(payload.cid).toEqual('cid')
       expect(payload.jti.length).toEqual(36)
     })
+
+    it('happy path for development', async () => {
+      let callback = 'http://callback.com'
+      auth.env = 'development'
+      let link = auth.generateDeepLink(callback, { selfid: 'selfid', cid: 'cid' })
+      const url = new URL(link)
+
+      let callbackURL = new URL(url.searchParams.get('link'))
+      expect(callbackURL.host).toEqual('callback.com')
+
+      let ciphertext = JSON.parse(
+        Buffer.from(callbackURL.searchParams.get('qr'), 'base64').toString()
+      )
+      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      expect(payload.typ).toEqual('identities.authenticate.req')
+      expect(payload.iss).toEqual('appID')
+      expect(payload.sub).toEqual('selfid')
+      expect(payload.aud).toEqual('selfid')
+      expect(payload.cid).toEqual('cid')
+      expect(payload.jti.length).toEqual(36)
+    })
+
+    it('happy path for production', async () => {
+      let callback = 'http://callback.com'
+      auth.env = ''
+      let link = auth.generateDeepLink(callback, { selfid: 'selfid', cid: 'cid' })
+      const url = new URL(link)
+
+      let callbackURL = new URL(url.searchParams.get('link'))
+      expect(callbackURL.host).toEqual('callback.com')
+
+      let ciphertext = JSON.parse(
+        Buffer.from(callbackURL.searchParams.get('qr'), 'base64').toString()
+      )
+      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      expect(payload.typ).toEqual('identities.authenticate.req')
+      expect(payload.iss).toEqual('appID')
+      expect(payload.sub).toEqual('selfid')
+      expect(payload.aud).toEqual('selfid')
+      expect(payload.cid).toEqual('cid')
+      expect(payload.jti.length).toEqual(36)
+    })
   })
 
   describe('AuthenticationService::generateQR', () => {
     it('happy path', async () => {
       let qr = auth.generateQR()
       expect(qr).not.toBe('')
+    })
+  })
+
+  describe('AuthenticationService::subscribe', () => {
+    it('happy path', async () => {
+      const msMock = jest
+        .spyOn(ms, 'subscribe')
+        .mockImplementation((messageType: string, callback: (n: any) => any) => {
+          expect(messageType).toEqual('identities.authenticate.resp')
+        })
+
+      expect(auth.subscribe((n: any): any => {})).toBeUndefined()
     })
   })
 })

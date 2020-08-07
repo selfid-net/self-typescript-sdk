@@ -36,7 +36,7 @@ export default class FactsService {
   async request(
     selfid: string,
     facts: Fact[],
-    opts?: { cid?: string; exp_timeout?: BigInteger }
+    opts?: { cid?: string; exp?: number }
   ): Promise<FactResponse> {
     let id = uuidv4()
 
@@ -63,7 +63,7 @@ export default class FactsService {
   async requestViaIntermediary(
     selfid: string,
     facts: Fact[],
-    opts?: { cid?: string; exp_timeout?: BigInteger; intermediary?: string }
+    opts?: { cid?: string; exp?: number; intermediary?: string }
   ) {
     let id = uuidv4()
 
@@ -93,7 +93,7 @@ export default class FactsService {
     this.ms.subscribe('identities.facts.query.resp', callback)
   }
 
-  generateQR(facts: Fact[], opts?: { selfid?: string; cid?: string }): Buffer {
+  generateQR(facts: Fact[], opts?: { selfid?: string; cid?: string; exp?: number }): Buffer {
     let options = opts ? opts : {}
     let selfid = options.selfid ? options.selfid : '-'
     let body = this.jwt.toSignedJson(this.buildRequest(selfid, facts, options))

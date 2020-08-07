@@ -107,7 +107,7 @@ describe('AuthenticationService', () => {
         }
       )
 
-      let res = await fs.request('selfid', [{ fact: 'phone_number' }], { cid: 'cid' })
+      let res = await fs.request('selfid', [{ fact: 'phone_number' }], { cid: 'cid', exp: 200 })
       expect(res).toBeTruthy()
     })
   })
@@ -170,6 +170,7 @@ describe('AuthenticationService', () => {
           expect(cid).toEqual('cid')
           // The cid is automatically generated
           let msg = Message.deserializeBinary(data.valueOf() as Uint8Array)
+          expect(msg.getRecipient()).toEqual('intermediary:deviceID')
           let input = msg.getCiphertext_asB64()
           let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
           let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
@@ -182,7 +183,8 @@ describe('AuthenticationService', () => {
       )
 
       let res = await fs.requestViaIntermediary('selfid', [{ fact: 'phone_number' }], {
-        cid: 'cid'
+        cid: 'cid',
+        intermediary: 'intermediary'
       })
       expect(res).toBeTruthy()
     })
@@ -211,7 +213,32 @@ describe('AuthenticationService', () => {
 
     it('happy path with custom options', async () => {
       let callback = 'http://callback.com'
-      let link = fs.generateDeepLink(callback, [{ fact: 'phone_number' }], { cid: 'cid' })
+      let link = fs.generateDeepLink(callback, [{ fact: 'phone_number' }], {
+        cid: 'cid',
+        selfid: 'selfid'
+      })
+      const url = new URL(link)
+
+      let callbackURL = new URL(url.searchParams.get('link'))
+      expect(callbackURL.host).toEqual('callback.com')
+
+      let ciphertext = JSON.parse(
+        Buffer.from(callbackURL.searchParams.get('qr'), 'base64').toString()
+      )
+      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      expect(payload.typ).toEqual('identities.facts.query.req')
+      expect(payload.iss).toEqual('appID')
+      expect(payload.sub).toEqual('selfid')
+      expect(payload.aud).toEqual('selfid')
+      expect(payload.cid).toEqual('cid')
+      expect(payload.facts).toEqual([{ fact: 'phone_number' }])
+      expect(payload.jti.length).toEqual(36)
+    })
+
+    it('happy path for development', async () => {
+      let callback = 'http://callback.com'
+      fs.env = 'development'
+      let link = fs.generateDeepLink(callback, [{ fact: 'phone_number' }])
       const url = new URL(link)
 
       let callbackURL = new URL(url.searchParams.get('link'))
@@ -225,15 +252,39 @@ describe('AuthenticationService', () => {
       expect(payload.iss).toEqual('appID')
       expect(payload.sub).toEqual('-')
       expect(payload.aud).toEqual('-')
-      expect(payload.cid).toEqual('cid')
-      expect(payload.facts).toEqual([{ fact: 'phone_number' }])
       expect(payload.jti.length).toEqual(36)
+      expect(payload.facts).toEqual([{ fact: 'phone_number' }])
+    })
+
+    it('happy path for production', async () => {
+      let callback = 'http://callback.com'
+      fs.env = ''
+      let link = fs.generateDeepLink(callback, [{ fact: 'phone_number' }])
+      const url = new URL(link)
+
+      let callbackURL = new URL(url.searchParams.get('link'))
+      expect(callbackURL.host).toEqual('callback.com')
+
+      let ciphertext = JSON.parse(
+        Buffer.from(callbackURL.searchParams.get('qr'), 'base64').toString()
+      )
+      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      expect(payload.typ).toEqual('identities.facts.query.req')
+      expect(payload.iss).toEqual('appID')
+      expect(payload.sub).toEqual('-')
+      expect(payload.aud).toEqual('-')
+      expect(payload.jti.length).toEqual(36)
+      expect(payload.facts).toEqual([{ fact: 'phone_number' }])
     })
   })
 
   describe('FactsService::generateQR', () => {
     it('happy path', async () => {
       let qr = fs.generateQR([{ fact: 'phone_number' }])
+      expect(qr).not.toBe('')
+    })
+    it('happy path custom selfid', async () => {
+      let qr = fs.generateQR([{ fact: 'phone_number' }], { selfid: 'selfid' })
       expect(qr).not.toBe('')
     })
   })

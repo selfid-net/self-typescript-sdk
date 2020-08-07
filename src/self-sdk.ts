@@ -45,10 +45,16 @@ export default class SelfSDK {
     appID: string,
     appKey: string,
     storageKey: string,
-    opts?: { baseURL?: string; messagingURL?: string; env?: string; autoReconnect?: boolean }
+    opts?: {
+      baseURL?: string
+      messagingURL?: string
+      env?: string
+      autoReconnect?: boolean
+      ntp?: boolean
+    }
   ): Promise<SelfSDK> {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
-    sdk.jwt = await Jwt.build(appID, appKey, {})
+    sdk.jwt = await Jwt.build(appID, appKey, opts)
 
     sdk.identityService = new IdentityService(sdk.jwt)
     if (sdk.messagingURL === '') {
