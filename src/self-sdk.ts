@@ -51,9 +51,13 @@ export default class SelfSDK {
     sdk.jwt = await Jwt.build(appID, appKey, {})
 
     sdk.identityService = new IdentityService(sdk.jwt)
-    sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService)
+    if (sdk.messagingURL === '') {
+      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService)
+    } else {
+      sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService)
+    }
 
-    sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms)
+    sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)
 
     let options = opts ? opts : {}
     let env = options.env ? options.env : '-'
@@ -109,7 +113,7 @@ export default class SelfSDK {
       return this.defaultMessagingURL
     }
 
-    if (opts.messagingURL) {
+    if (opts.messagingURL !== undefined) {
       return opts.messagingURL
     }
     if (opts.env) {

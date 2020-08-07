@@ -112,7 +112,9 @@ export default class Messaging {
   }
 
   close() {
-    this.ws.close()
+    if (this.connected) {
+      this.ws.close()
+    }
   }
 
   private async onmessage(msg: Message) {
