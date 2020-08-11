@@ -1,10 +1,11 @@
 {
   "name": "self-sdk",
   "type": "mod",
-  "version": "0.0.0",
+  "version": "0.0.1-development",
   "description": "",
   "keywords": [],
   "main": "dist/self-sdk.umd.js",
+  "types": "dist/self-sdk.umd.js",
   "module": "dist/self-sdk.es5.js",
   "typings": "dist/types/self-sdk.d.ts",
   "files": [
@@ -13,7 +14,7 @@
   "author": "Adrià Cidre <593270+adriacidre@users.noreply.github.com>",
   "repository": {
     "type": "git",
-    "url": "git@github.com:selfid-net/self-typescript-sdk.git"
+    "url": "https://github.com/selfid-net/self-typescript-sdk.git"
   },
   "license": "MIT",
   "engines": {
@@ -113,7 +114,7 @@
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-sourcemaps": "^0.4.2",
     "rollup-plugin-typescript2": "^0.18.0",
-    "semantic-release": "^15.9.16",
+    "semantic-release": "^17.1.1",
     "shelljs": "^0.8.3",
     "travis-deploy-once": "^5.0.9",
     "ts-jest": "^23.10.2",
