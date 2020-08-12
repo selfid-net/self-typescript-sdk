@@ -1,8 +1,8 @@
-import SelfSDK from '../../src/self-sdk.js'
+import SelfSDK from 'self-sdk'
 import { exit } from 'process';
 
 async function manageConnections(appID: string, appSecret: string, connection: string) {
-    // const SelfSDK = require("../../src/self-sdk.ts");
+    const SelfSDK = require("self-sdk");
     const sdk = await SelfSDK.build( appID, appSecret, "random", {env: "review"});
 
     console.log("\nPermitting connection "+connection)
