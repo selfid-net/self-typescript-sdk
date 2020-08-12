@@ -12,8 +12,8 @@ import IdentityService from './identity-service'
 import Jwt from './jwt'
 import Messaging from './messaging'
 import Fact from './fact'
-import { MsgType } from '../generated/msgtype_pb'
-import { Message } from '../generated/message_pb'
+import { MsgType } from 'self-protos/msgtype_pb'
+import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 
 type MessageProcessor = (n: number) => any

@@ -1,9 +1,9 @@
 import Jwt from './jwt'
 import IdentityService from './identity-service'
 
-import { Auth } from '../generated/auth_pb'
-import { MsgType } from '../generated/msgtype_pb'
-import { Message } from '../generated/message_pb'
+import { Auth } from 'self-protos/auth_pb'
+import { MsgType } from 'self-protos/msgtype_pb'
+import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 
 export interface Request {

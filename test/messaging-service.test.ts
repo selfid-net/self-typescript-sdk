@@ -4,11 +4,11 @@ import Messaging from '../src/messaging'
 import FactsService from '../src/facts-service'
 
 import { WebSocket, Server } from 'mock-socket'
-import { Message } from '../generated/message_pb'
-import { MsgType } from '../generated/msgtype_pb'
+import { Message } from 'self-protos/message_pb'
+import { MsgType } from 'self-protos/msgtype_pb'
 import MessagingService from '../src/messaging-service'
-import { AccessControlList } from '../generated/acl_pb'
-import { ACLCommand } from '../generated/aclcommand_pb'
+import { AccessControlList } from 'self-protos/acl_pb'
+import { ACLCommand } from 'self-protos/aclcommand_pb'
 
 describe('Messaging service', () => {
   let mss: MessagingService

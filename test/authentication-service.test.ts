@@ -4,8 +4,8 @@ import AuthenticationService from '../src/authentication-service'
 import Messaging from '../src/messaging'
 
 import { WebSocket, Server } from 'mock-socket'
-import { Message } from '../generated/message_pb'
-import { MsgType } from '../generated/msgtype_pb'
+import { Message } from 'self-protos/message_pb'
+import { MsgType } from 'self-protos/msgtype_pb'
 
 /**
  * Attestation test
