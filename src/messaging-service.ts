@@ -4,10 +4,10 @@ import { v4 as uuidv4 } from 'uuid'
 import IdentityService from './identity-service'
 import Messaging from './messaging'
 
-import { AccessControlList } from '../generated/acl_pb'
-import { MsgType } from '../generated/msgtype_pb'
-import { ACLCommand } from '../generated/aclcommand_pb'
-import { Message } from '../generated/message_pb'
+import { AccessControlList } from 'self-protos/acl_pb'
+import { MsgType } from 'self-protos/msgtype_pb'
+import { ACLCommand } from 'self-protos/aclcommand_pb'
+import { Message } from 'self-protos/message_pb'
 
 export interface Request {
   [details: string]: any

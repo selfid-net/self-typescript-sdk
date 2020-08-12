@@ -33,11 +33,11 @@ export default {
             // left-hand side can be an absolute path, a path
             // relative to the current directory, or the name
             // of a module in node_modules
-            'generated/acl_pb.js': [ 'AccessControlList' ],
-            'generated/msgtype_pb.js': [ 'MsgType' ],
-            'generated/aclcommand_pb.js': [ 'ACLCommand' ],
-            'generated/message_pb.js': [ 'Message' ],
-            'generated/auth_pb.js': [ 'Auth' ]
+            'self-protos/acl_pb.js': [ 'AccessControlList' ],
+            'self-protos/msgtype_pb.js': [ 'MsgType' ],
+            'self-protos/aclcommand_pb.js': [ 'ACLCommand' ],
+            'self-protos/message_pb.js': [ 'Message' ],
+            'self-protos/auth_pb.js': [ 'Auth' ]
           }
     }),
 
