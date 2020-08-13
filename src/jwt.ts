@@ -63,10 +63,12 @@ export default class Jwt {
     let now = this.now()
     let jsonBody = JSON.stringify({
       jti: uuidv4(),
+      cid: uuidv4(),
       iat: Math.floor((now - fiveSecs) / 1000),
       exp: Math.floor((now + oneMinute) / 1000),
       iss: this.appID,
-      typ: 'api-token'
+      sub: this.appID,
+      typ: 'auth.token'
     })
     let body = this.encode(jsonBody)
 
