@@ -128,7 +128,7 @@
   },
   "dependencies": {
     "@types/libsodium-wrappers": "^0.7.7",
-    "@types/uuid": "^8.0.0",
+    "@types/uuid": "^8.3.0",
     "axios": "^0.19.2",
     "google-protobuf": "^4.0.0-rc.1",
     "libsodium-wrappers": "^0.7.6",
@@ -137,7 +137,7 @@
     "ntpclient": "^1.0.2",
     "open": ">=6.0.0",
     "qrcode-generator-ts": "0.0.4",
-    "self-protos": "^1.0.0",
+    "self-protos": "^1.0.1",
     "text-encoding": "^0.7.0",
     "ts-protoc-gen": "^0.12.0",
     "uuid": "^8.2.0",
