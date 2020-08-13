@@ -18,6 +18,9 @@ import FactResponse from './fact-response'
 
 type MessageProcessor = (n: number) => any
 
+/**
+ * A service to manage fact requests
+ */
 export default class FactsService {
   DEFAULT_INTERMEDIARY = 'self_intermediary'
 
@@ -26,6 +29,13 @@ export default class FactsService {
   is: IdentityService
   env: string
 
+  /**
+   * The constructor for FactsService
+   * @param jwt the Jwt
+   * @param ms the Messaging object
+   * @param is the IdentityService
+   * @param env the environment on what you want to run your app.
+   */
   constructor(jwt: Jwt, ms: Messaging, is: IdentityService, env: string) {
     this.jwt = jwt
     this.ms = ms
@@ -33,6 +43,12 @@ export default class FactsService {
     this.env = env
   }
 
+  /**
+   * Send a fact request to a specific user
+   * @param selfid user identifier to send the fact request.
+   * @param facts an array with the facts you're requesting.
+   * @param opts optional parameters like conversation id or the expiration time
+   */
   async request(
     selfid: string,
     facts: Fact[],
@@ -60,6 +76,13 @@ export default class FactsService {
     return res
   }
 
+  /**
+   * Sends a request via an intermediary
+   * @param selfid user identifier to send the fact request.
+   * @param facts an array with the facts you're requesting.
+   * @param opts optional parameters like conversation id or the expiration time
+   * or the selfid of the intermediary you want to use (defaulting to self_intermediary)
+   */
   async requestViaIntermediary(
     selfid: string,
     facts: Fact[],
@@ -89,10 +112,20 @@ export default class FactsService {
     return res
   }
 
+  /**
+   * Subscribes to fact responses `identities.facts.query.resp` and calls
+   * the given callback.
+   * @param callback procedure to be called when a new facts response is received.
+   */
   subscribe(callback: (n: any) => any) {
     this.ms.subscribe('identities.facts.query.resp', callback)
   }
 
+  /**
+   * Generates a QR code your users can scan from their app to share facts with your app.
+   * @param facts an array with the facts you're requesting.
+   * @param opts allows you specify optional parameters like the conversation id <cid>, the selfid or the expiration time.
+   */
   generateQR(facts: Fact[], opts?: { selfid?: string; cid?: string; exp?: number }): Buffer {
     let options = opts ? opts : {}
     let selfid = options.selfid ? options.selfid : '-'
@@ -110,6 +143,12 @@ export default class FactsService {
     return buf
   }
 
+  /**
+   * Generates a deep link url so you can request facts with a simple link.
+   * @param callback the url you want your users to be sent back after authentication.
+   * @param facts an array with the facts you're requesting.
+   * @param opts optional parameters like selfid or conversation id
+   */
   generateDeepLink(
     callback: string,
     facts: Fact[],
@@ -128,6 +167,12 @@ export default class FactsService {
     return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
   }
 
+  /**
+   * builds an authentication request
+   * @param selfid identifier for the user you want to authenticate
+   * @param facts an array with the facts you're requesting.
+   * @param opts optional parameters like conversation id or the expiration time
+   */
   private buildRequest(selfid: string, facts: Fact[], opts?: { cid?: string; exp?: number }): any {
     let options = opts ? opts : {}
     let cid = options.cid ? options.cid : uuidv4()

@@ -1,26 +1,46 @@
 import Jwt from './jwt'
 
+/**
+ * A PublicKey representation
+ */
 type PublicKey = {
   id: number
   key: string
 }
 
+/**
+ * An identity object representing both apps and users.
+ */
 type Identity = {
   id: string
   publicKeys: PublicKey[]
 }
 
+/**
+ * A service to manage all requests against Self servers.
+ */
 export default class IdentityService {
   jwt: Jwt
+  url: string
 
   readonly errUnauthorized = new Error("you're not authorized to interact with this identity")
   readonly errUnexistingIdentity = new Error('identity does not exist')
   readonly errInternal = new Error('internal error')
 
-  constructor(jwt: Jwt) {
+  /**
+   * Creates an instance of IdentityService
+   * @param jwt a valid Jwt object
+   * @param url the url where the api is located
+   */
+  constructor(jwt: Jwt, url: string) {
     this.jwt = jwt
+    this.url = url
   }
 
+  /**
+   * Returns a list of the device identifiers for a specific user.
+   * @param selfid the user you want to query the devices.
+   */
   async devices(selfid: string): Promise<string[]> {
     let devices: string[] = []
     let response: any
@@ -32,11 +52,7 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      // TODO change this hardcoded url by this.url
-      response = await axios.get(
-        `https://api.review.selfid.net/v1/identities/${selfid}/devices`,
-        options
-      )
+      response = await axios.get(`${this.url}/v1/identities/${selfid}/devices`, options)
     } catch (error) {
       throw this.errInternal
     }
@@ -52,6 +68,10 @@ export default class IdentityService {
     return devices
   }
 
+  /**
+   * Gets a list with the public keys for a specific user.
+   * @param selfid the user's selfid you want the public keys.
+   */
   async publicKeys(selfid: string): Promise<PublicKey[]> {
     let keys: any
     let response: any
@@ -62,10 +82,7 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      response = await axios.get(
-        `https://api.review.selfid.net/v1/identities/${selfid}/public_keys`,
-        options
-      )
+      response = await axios.get(`${this.url}/v1/identities/${selfid}/public_keys`, options)
     } catch (error) {
       throw this.errInternal
     }
@@ -81,6 +98,10 @@ export default class IdentityService {
     return keys
   }
 
+  /**
+   * Gets the details of a specific identity.
+   * @param selfid self identifier for the identity.
+   */
   async get(selfid: string): Promise<Identity> {
     let identity: any
     let response: any
@@ -92,7 +113,7 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      response = await axios.get(`https://api.review.selfid.net/v1/identities/${selfid}`, options)
+      response = await axios.get(`${this.url}/v1/identities/${selfid}`, options)
     } catch (error) {
       throw this.errInternal
     }

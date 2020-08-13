@@ -17,14 +17,22 @@ import { Message } from 'self-protos/message_pb'
 
 type MessageProcessor = (n: number) => any
 
+/**
+ * Input class to handle authentication requests on self network.
+ */
 export default class AuthenticationService {
-  defaultTimeout = 300 * 100
-
   jwt: Jwt
   ms: Messaging
   is: IdentityService
   env: string
 
+  /**
+   * Constructs the AuthenticationService
+   * @param jwt the Jwt
+   * @param ms the Messaging object
+   * @param is the IdentityService
+   * @param env the environment on what you want to run your app.
+   */
   constructor(jwt: Jwt, ms: Messaging, is: IdentityService, env: string) {
     this.jwt = jwt
     this.ms = ms
@@ -32,6 +40,11 @@ export default class AuthenticationService {
     this.env = env
   }
 
+  /**
+   * Sends an authentication request to the given Selfid
+   * @param selfid the identifier for the identity you want to authenticate
+   * @param opts allows you specify optional parameters like the conversation id <cid>
+   */
   async request(selfid: string, opts?: { cid?: string }): Promise<boolean | string> {
     let id = uuidv4()
 
@@ -55,6 +68,10 @@ export default class AuthenticationService {
     return res.status === 'accepted'
   }
 
+  /**
+   * Generates a QR code your users can scan from their app to authenticate
+   * @param opts allows you specify optional parameters like the conversation id <cid> or the selfid
+   */
   generateQR(opts?: { selfid?: string; cid?: string }): Buffer {
     let options = opts ? opts : {}
     let selfid = options.selfid ? options.selfid : '-'
@@ -72,6 +89,11 @@ export default class AuthenticationService {
     return buf
   }
 
+  /**
+   * Generates a deep link url so you can authenticate your users with a simple link.
+   * @param callback the url you want your users to be sent back after authentication.
+   * @param opts optional parameters like selfid or conversation id
+   */
   generateDeepLink(callback: string, opts?: { selfid?: string; cid?: string }): string {
     let options = opts ? opts : {}
     let selfid = options.selfid ? options.selfid : '-'
@@ -86,10 +108,20 @@ export default class AuthenticationService {
     return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
   }
 
+  /**
+   * Subscribes to authentication response `identities.authenticate.resp` and calls
+   * the given callback.
+   * @param callback procedure to be called when a new auth response is received.
+   */
   subscribe(callback: (n: any) => any) {
     this.ms.subscribe('identities.authenticate.resp', callback)
   }
 
+  /**
+   * builds an authentication request
+   * @param selfid identifier for the user you want to authenticate
+   * @param opts optional parameters like conversation id or the expiration time
+   */
   private buildRequest(selfid: string, opts?: { cid?: string; exp?: number }): any {
     let options = opts ? opts : {}
     let cid = options.cid ? options.cid : uuidv4()

@@ -7,7 +7,9 @@ import MessagingService from './messaging-service'
 import Jwt from './jwt'
 import Messaging from './messaging'
 
-// ...
+/**
+ * SelfSDK allow you interact with self network.
+ */
 export default class SelfSDK {
   appID: string
   appKey: string
@@ -26,6 +28,13 @@ export default class SelfSDK {
   defaultBaseURL = 'https://api.selfid.net'
   defaultMessagingURL = 'wss://messaging.selfid.net/v1/messaging'
 
+  /**
+   * Use static build method to create your SDK
+   * @param appID your SELF_APP_ID
+   * @param appKey your SELF_APP_SECRET
+   * @param storageKey your SELF_STORAGE_KEY
+   * @param opts array of options
+   */
   constructor(
     appID: string,
     appKey: string,
@@ -41,6 +50,19 @@ export default class SelfSDK {
     // this.autoReconnect = opts?.autoReconnect ? opts?.autoReconnect : true;
   }
 
+  /**
+   * Creates and starts your SelfSDK instance
+   * @param appID your SELF_APP_ID
+   * @param appKey your SELF_APP_SECRET
+   * @param storageKey your SELF_STORAGE_KEY
+   * @param opts optional parameters
+   *  - baseURL : string with the baseURL you want to use
+   *  - messagingURL : string the messaging url to be used
+   *  - env : the environment you want to run your app against
+   *  - autoReconnect : will automatically reconnect your app if disconnected
+   *  - ntp : enable/disable ntp sync (just for testing)
+   * @returns a ready to use SelfSDK
+   */
   public static async build(
     appID: string,
     appKey: string,
@@ -56,7 +78,7 @@ export default class SelfSDK {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
     sdk.jwt = await Jwt.build(appID, appKey, opts)
 
-    sdk.identityService = new IdentityService(sdk.jwt)
+    sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
     if (sdk.messagingURL === '') {
       sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService)
     } else {
@@ -78,23 +100,42 @@ export default class SelfSDK {
     return sdk
   }
 
+  /**
+   * Gracefully stops the sdk
+   */
   stop() {
     this.jwt.stop()
     this.messagingService.close()
   }
 
+  /**
+   * Access the authentication service
+   * @returns AuthenticationService
+   */
   authentication(): AuthenticationService {
     return this.authenticationService
   }
 
+  /**
+   * Access the facts service
+   * @returns FactsService
+   */
   facts(): FactsService {
     return this.factsService
   }
 
+  /**
+   * Access the identity service
+   * @returns IdentityService
+   */
   identity(): IdentityService {
     return this.identityService
   }
 
+  /**
+   * Access the messaging service
+   * @returns MessagingService
+   */
   messaging(): MessagingService {
     return this.messagingService
   }
