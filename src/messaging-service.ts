@@ -17,21 +17,40 @@ export interface ACLRule {
   [source: string]: Date
 }
 
+/**
+ * Service to manage interactions with self messaging services
+ */
 export default class MessagingService {
   is: IdentityService
   ms: Messaging
   jwt: Jwt
 
+  /**
+   * constructs a MessagingService
+   * @param jwt a Jwt object
+   * @param ms a Messaging object
+   * @param is an IdentityService object
+   */
   constructor(jwt: Jwt, ms: Messaging, is: IdentityService) {
     this.jwt = jwt
     this.ms = ms
     this.is = is
   }
 
+  /**
+   * Subscribes to any message type and executes the callback when received.
+   * @param callback procedure to be called when a new message is received.
+   */
   subscribe(type: string, callback: any) {
     this.ms.subscribe(type, callback)
   }
 
+  /**
+   * Allows incomming messages from the specified identity.
+   * @param selfid The identifier for the identity (user or app) to be permitted.
+   * Use `*` to permit all.
+   * @returns a response
+   */
   async permitConnection(selfid: string): Promise<boolean | Response> {
     console.log('permitting connection')
     let someYears = 999 * 365 * 24 * 60 * 60 * 1000
@@ -52,10 +71,17 @@ export default class MessagingService {
     return this.ms.send_and_wait(msg.getId(), { data: msg.serializeBinary() })
   }
 
+  /**
+   * closes the websocket connection.
+   */
   close() {
     this.ms.close()
   }
 
+  /**
+   * Lists the current connections of your app.
+   * @returns a list of ACL rules
+   */
   async allowedConnections(): Promise<ACLRule[]> {
     console.log('listing allowed connections')
     let connections: ACLRule[] = []
@@ -73,6 +99,11 @@ export default class MessagingService {
     return connections
   }
 
+  /**
+   * Revokes messages from the given identity
+   * @param selfid identity to revoke
+   * @returns Response
+   */
   async revokeConnection(selfid: string): Promise<boolean | Response> {
     console.log('revoking connection')
 
@@ -89,10 +120,18 @@ export default class MessagingService {
     return this.ms.send_and_wait(msg.getId(), { data: msg.serializeBinary() })
   }
 
+  /**
+   * Gets the deviceID for your app
+   */
   deviceID(): string {
     return '1'
   }
 
+  /**
+   * Sends a raw message
+   * @param recipient the recipient's identifier.
+   * @param request the request to be sent.
+   */
   async send(recipient: string, request: Request): Promise<void> {
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))
@@ -120,6 +159,11 @@ export default class MessagingService {
     this.ms.send(recipient, { data: msg.serializeBinary() })
   }
 
+  /**
+   * Sends a notification message
+   * @param recipient the recipient's identifier.
+   * @param message the message to be sent.
+   */
   async notify(recipient: string, message: string): Promise<void> {
     await this.send(recipient, {
       typ: 'identities.notify',
