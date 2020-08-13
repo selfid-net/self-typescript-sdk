@@ -1,19 +1,23 @@
-import SelfSDK from 'self-sdk'
+import SelfSDK from '../../src/self-sdk'
 import { exit } from 'process';
 
 async function request(appID: string, appSecret: string, selfID: string) {
-    const SelfSDK = require("self-sdk");
+    // const SelfSDK = require("self-sdk");
     const sdk = await SelfSDK.build( appID, appSecret, "random", {env: "review"});
 
     console.log("requesting facts through intermediary...")
-    let res = await sdk.facts().requestViaIntermediary('84099724068', [{
+    let res = await sdk.facts().requestViaIntermediary(selfID, [{
         fact: 'email_address',
         operator: '==',
         sources: ['user_specified'],
         expected_value: 'test@test.org'
     }])
-    console.log("your assertion is....")
-    console.log(res.attestationValuesFor('email_address')[0])
+    if(res.status === "unauthorized") {
+        console.log("you are unauthorized to run this action")
+    } else {
+        console.log("your assertion is....")
+        console.log(res.attestationValuesFor('email_address')[0])
+    }
 
     sdk.stop()
     exit();
