@@ -40,8 +40,6 @@ export default class Messaging {
         this.offsetPath = opts.storageDir
       }
     }
-    console.log(`offset path  ${this.offsetPath}`)
-    console.log(fs.existsSync(this.offsetPath))
     if (!fs.existsSync(this.offsetPath)) {
       console.log('creating file')
       fs.mkdirSync(this.offsetPath)
@@ -72,7 +70,7 @@ export default class Messaging {
     await this.authenticate()
   }
 
-  private async processIncommingMessage(input: string) {
+  private async processIncommingMessage(input: string, offset: number) {
     try {
       let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
       let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
@@ -83,9 +81,7 @@ export default class Messaging {
         return
       }
 
-      if ('offset' in payload) {
-        this.setOffset(payload.offset)
-      }
+      this.setOffset(offset)
       switch (payload.typ) {
         case 'identities.facts.query.resp': {
           await this.processResponse(payload, 'identities.facts.query.resp')
@@ -97,7 +93,7 @@ export default class Messaging {
         }
       }
     } catch (error) {
-      console.log('skipping message')
+      console.log(`skipping message ${error}`)
     }
   }
 
@@ -162,7 +158,7 @@ export default class Messaging {
       }
       case MsgType.MSG: {
         console.log(`message received ${msg.getId()}`)
-        await this.processIncommingMessage(msg.getCiphertext_asB64())
+        await this.processIncommingMessage(msg.getCiphertext_asB64(), msg.getOffset())
         break
       }
     }
@@ -315,6 +311,6 @@ export default class Messaging {
   }
 
   private setOffset(offset: number) {
-    fs.writeFileSync(this.offsetPath, offset.toString(), { flag: 'ws' })
+    fs.writeFileSync(this.offsetPath, offset.toString(), { flag: 'w' })
   }
 }

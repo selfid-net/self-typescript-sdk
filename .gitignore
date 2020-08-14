@@ -11,4 +11,4 @@ compiled
 .rpt2_cache
 docs
 src/*.js
-.self-storage
+.self_storage/
