@@ -50,7 +50,7 @@ export default class Messaging {
     is: IdentityService,
     opts?: { storageDir?: string }
   ): Promise<Messaging> {
-    let ms = new Messaging(url, jwt, is)
+    let ms = new Messaging(url, jwt, is, opts)
 
     await ms.setup()
 
