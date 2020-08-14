@@ -57,7 +57,11 @@ export default class MessagingService {
     let exp = new Date(Math.floor(this.jwt.now() + someYears))
 
     let payload = this.jwt.prepare({
+      jti: uuidv4(),
+      cid: uuidv4(),
+      typ: 'acl.permit',
       iss: this.jwt.appID,
+      sub: this.jwt.appID,
       acl_source: selfid,
       acl_exp: exp.toISOString()
     })
@@ -108,7 +112,12 @@ export default class MessagingService {
     console.log('revoking connection')
 
     let payload = this.jwt.prepare({
-      iss: this.jwt.appID
+      iss: this.jwt.appID,
+      sub: this.jwt.appID,
+      acl_source: selfid,
+      jti: uuidv4(),
+      cid: uuidv4(),
+      typ: 'acl.revoke'
     })
 
     const msg = new AccessControlList()
