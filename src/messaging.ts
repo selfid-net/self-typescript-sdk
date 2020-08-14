@@ -7,6 +7,7 @@ import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 
 import * as fs from 'fs'
+import { openStdin } from 'process'
 
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
@@ -33,9 +34,17 @@ export default class Messaging {
     this.callbacks = new Map()
     this.connected = false
     this.is = is
-    this.offsetPath = './.self_storage'
+    this.offsetPath = `${process.cwd()}/.self_storage`
     if (opts) {
-      this.offsetPath = opts.storageDir ? opts.storageDir : './.self_storage'
+      if ('storageDir' in opts) {
+        this.offsetPath = opts.storageDir
+      }
+    }
+    console.log(`offset path  ${this.offsetPath}`)
+    console.log(fs.existsSync(this.offsetPath))
+    if (!fs.existsSync(this.offsetPath)) {
+      console.log('creating file')
+      fs.mkdirSync(this.offsetPath)
     }
     this.offsetPath = `${this.offsetPath}/${this.jwt.appID}:${this.jwt.deviceID}.offset`
 
@@ -298,7 +307,7 @@ export default class Messaging {
 
   private getOffset(): number {
     try {
-      let offset = fs.readFileSync(this.offsetPath, { flag: 'rb' })
+      let offset = fs.readFileSync(this.offsetPath, { flag: 'r' })
       return parseInt(offset.toString(), 10)
     } catch (error) {
       return 0
@@ -306,7 +315,6 @@ export default class Messaging {
   }
 
   private setOffset(offset: number) {
-    fs.writeFileSync(this.offsetPath, offset, { flag: 'wb' })
-    console.log('supu')
+    fs.writeFileSync(this.offsetPath, offset.toString(), { flag: 'ws' })
   }
 }
