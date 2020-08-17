@@ -80,9 +80,9 @@ export default class SelfSDK {
 
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
     if (sdk.messagingURL === '') {
-      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService)
+      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService, {})
     } else {
-      sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService)
+      sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService, {})
     }
 
     sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)

@@ -6,6 +6,9 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 
+import * as fs from 'fs'
+import { openStdin } from 'process'
+
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
   acknowledged?: boolean
@@ -22,22 +25,39 @@ export default class Messaging {
   requests: Map<string, Request>
   callbacks: Map<string, (n: any) => any>
   is: IdentityService
+  offsetPath: string
 
-  constructor(url: string, jwt: Jwt, is: IdentityService) {
+  constructor(url: string, jwt: Jwt, is: IdentityService, opts?: { storageDir?: string }) {
     this.jwt = jwt
     this.url = url
     this.requests = new Map()
     this.callbacks = new Map()
     this.connected = false
     this.is = is
+    this.offsetPath = `${process.cwd()}/.self_storage`
+    if (opts) {
+      if ('storageDir' in opts) {
+        this.offsetPath = opts.storageDir
+      }
+    }
+    if (!fs.existsSync(this.offsetPath)) {
+      console.log('creating file')
+      fs.mkdirSync(this.offsetPath)
+    }
+    this.offsetPath = `${this.offsetPath}/${this.jwt.appID}:${this.jwt.deviceID}.offset`
 
     if (this.url !== '') {
       this.connect()
     }
   }
 
-  public static async build(url: string, jwt: Jwt, is: IdentityService): Promise<Messaging> {
-    let ms = new Messaging(url, jwt, is)
+  public static async build(
+    url: string,
+    jwt: Jwt,
+    is: IdentityService,
+    opts?: { storageDir?: string }
+  ): Promise<Messaging> {
+    let ms = new Messaging(url, jwt, is, opts)
 
     await ms.setup()
 
@@ -50,7 +70,7 @@ export default class Messaging {
     await this.authenticate()
   }
 
-  private async processIncommingMessage(input: string) {
+  private async processIncommingMessage(input: string, offset: number) {
     try {
       let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
       let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
@@ -61,6 +81,7 @@ export default class Messaging {
         return
       }
 
+      this.setOffset(offset)
       switch (payload.typ) {
         case 'identities.facts.query.resp': {
           await this.processResponse(payload, 'identities.facts.query.resp')
@@ -72,7 +93,7 @@ export default class Messaging {
         }
       }
     } catch (error) {
-      console.log('skipping message')
+      console.log(`skipping message ${error}`)
     }
   }
 
@@ -137,7 +158,7 @@ export default class Messaging {
       }
       case MsgType.MSG: {
         console.log(`message received ${msg.getId()}`)
-        await this.processIncommingMessage(msg.getCiphertext_asB64())
+        await this.processIncommingMessage(msg.getCiphertext_asB64(), msg.getOffset())
         break
       }
     }
@@ -172,6 +193,7 @@ export default class Messaging {
     msg.setType(MsgType.AUTH)
     msg.setId('authentication')
     msg.setToken(token)
+    msg.setOffset(this.getOffset())
     msg.setDevice(this.jwt.deviceID)
 
     await this.send_and_wait(msg.getId(), {
@@ -277,5 +299,18 @@ export default class Messaging {
 
   subscribe(messageType: string, callback: (n: any) => any) {
     this.callbacks.set(messageType, callback)
+  }
+
+  private getOffset(): number {
+    try {
+      let offset = fs.readFileSync(this.offsetPath, { flag: 'r' })
+      return parseInt(offset.toString(), 10)
+    } catch (error) {
+      return 0
+    }
+  }
+
+  private setOffset(offset: number) {
+    fs.writeFileSync(this.offsetPath, offset.toString(), { flag: 'w' })
   }
 }
