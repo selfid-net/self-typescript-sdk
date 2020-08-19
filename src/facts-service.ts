@@ -52,8 +52,8 @@ export default class FactsService {
   async request(
     selfid: string,
     facts: Fact[],
-    opts?: { cid?: string; exp?: number }
-  ): Promise<FactResponse> {
+    opts?: { cid?: string; exp?: number; async?: boolean }
+  ): Promise<FactResponse | boolean> {
     let id = uuidv4()
 
     // Get user's device
@@ -70,6 +70,13 @@ export default class FactsService {
     msg.setRecipient(`${selfid}:${devices[0]}`)
     msg.setCiphertext(ciphertext)
 
+    let options = opts ? opts : {}
+    let as = options.async ? options.async : false
+    if (as) {
+      console.log('sending ' + j.cid)
+      let res = this.ms.send(j.cid, { data: msg.serializeBinary(), waitForResponse: false })
+      return true
+    }
     console.log('requesting ' + j.cid)
     let res = await this.ms.request(j.cid, msg.serializeBinary())
 
