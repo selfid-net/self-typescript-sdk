@@ -43,9 +43,12 @@ export default class AuthenticationService {
   /**
    * Sends an authentication request to the given Selfid
    * @param selfid the identifier for the identity you want to authenticate
-   * @param opts allows you specify optional parameters like the conversation id <cid>
+   * @param opts allows you specify optional parameters like the conversation id <cid> or async
    */
-  async request(selfid: string, opts?: { cid?: string }): Promise<boolean | string> {
+  async request(
+    selfid: string,
+    opts?: { cid?: string; async?: boolean }
+  ): Promise<boolean | string> {
     let id = uuidv4()
 
     // Get user's device
@@ -61,6 +64,14 @@ export default class AuthenticationService {
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${devices[0]}`)
     msg.setCiphertext(ciphertext)
+
+    let options = opts ? opts : {}
+    let as = options.async ? options.async : false
+    if (as) {
+      console.log('sending ' + msg.getId())
+      let res = this.ms.send(j.cid, { data: msg.serializeBinary(), waitForResponse: false })
+      return true
+    }
 
     console.log('requesting ' + msg.getId())
     let res = await this.ms.request(j.cid, msg.serializeBinary())
