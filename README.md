@@ -4,7 +4,7 @@
 
 By [Self ID](https://www.selfid.net/).
 
-[![Build Status](https://api.travis-ci.org/joinself/selfid-typescript-sdk.svg?branch=master)](http://travis-ci.org/joinself/selfid-typescript-sdk)
+[![Build Status](https://api.travis-ci.org/joinself/self-typescript-sdk.svg?branch=master)](http://travis-ci.org/joinself/self-typescript-sdk)
 [![Gem Version](https://badge.fury.io/rb/selfid.svg)](https://badge.fury.io/rb/selfid)
 
 This sdk provides a toolset to interact with self network from your javascript code.
@@ -63,7 +63,7 @@ This sdk comes with some examples built to help you have an idea of how or what 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/joinself/selfid-typescript-sdk.
+Bug reports and pull requests are welcome on GitHub at https://github.com/joinself/self-typescript-sdk.
 
 
 ## License
