@@ -14,7 +14,7 @@
   "author": "Adrià Cidre <593270+adriacidre@users.noreply.github.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/selfid-net/self-typescript-sdk.git"
+    "url": "https://github.com/joinself/self-typescript-sdk.git"
   },
   "license": "MIT",
   "engines": {
