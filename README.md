@@ -2,7 +2,7 @@
 
 ![SelfID logo](https://media-exp1.licdn.com/dms/image/C4E0BAQHiKfIfzq6P0w/company-logo_200_200/0?e=2159024400&v=beta&t=JDd8UXJlMG7AKpLNAP5nDYd75gQZT8E8s98xSc0jRO0)
 
-By [Self ID](https://www.selfid.net/).
+By [Self ID](https://www.joinself.com/).
 
 [![Build Status](https://api.travis-ci.org/joinself/self-typescript-sdk.svg?branch=master)](http://travis-ci.org/joinself/self-typescript-sdk)
 [![Gem Version](https://badge.fury.io/rb/selfid.svg)](https://badge.fury.io/rb/selfid)
@@ -37,7 +37,7 @@ In order to use this gem you'll need to get your `app_id` and `app_api_key` from
 
 ## Documentation
 
-You can find general documentation for Self on [self docs site](https://docs.selfid.net/) and specifically for this library on [rubydoc](https://www.rubydoc.info/gems/selfid/).
+You can find general documentation for Self on [self docs site](https://docs.joinself.com/) and specifically for this library on [rubydoc](https://www.rubydoc.info/gems/selfid/).
 
 ## Examples
 

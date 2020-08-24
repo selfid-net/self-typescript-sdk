@@ -25,8 +25,8 @@ export default class SelfSDK {
   private identityService: any
   private messagingService: any
 
-  defaultBaseURL = 'https://api.selfid.net'
-  defaultMessagingURL = 'wss://messaging.selfid.net/v1/messaging'
+  defaultBaseURL = 'https://api.joinself.com'
+  defaultMessagingURL = 'wss://messaging.joinself.com/v1/messaging'
 
   /**
    * Use static build method to create your SDK
@@ -149,7 +149,7 @@ export default class SelfSDK {
       return opts.baseURL
     }
     if (opts.env) {
-      return `https://api.${opts.env}.selfid.net`
+      return `https://api.${opts.env}.joinself.com`
     }
 
     return this.defaultBaseURL
@@ -164,7 +164,7 @@ export default class SelfSDK {
       return opts.messagingURL
     }
     if (opts.env) {
-      return `wss://messaging.${opts.env}.selfid.net/v1/messaging`
+      return `wss://messaging.${opts.env}.joinself.com/v1/messaging`
     }
 
     return this.defaultMessagingURL

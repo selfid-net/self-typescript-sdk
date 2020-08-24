@@ -52,14 +52,14 @@ describe('SelfSDK test', () => {
   })
 
   it('urls vary for each environment', async () => {
-    expect(sdk['calculateBaseURL']({ env: 'review' })).toEqual(`https://api.review.selfid.net`)
+    expect(sdk['calculateBaseURL']({ env: 'review' })).toEqual(`https://api.review.joinself.com`)
     expect(sdk['calculateMessagingURL']({ env: 'review' })).toEqual(
-      `wss://messaging.review.selfid.net/v1/messaging`
+      `wss://messaging.review.joinself.com/v1/messaging`
     )
 
-    expect(sdk['calculateBaseURL']({ env: 'sandbox' })).toEqual(`https://api.sandbox.selfid.net`)
+    expect(sdk['calculateBaseURL']({ env: 'sandbox' })).toEqual(`https://api.sandbox.joinself.com`)
     expect(sdk['calculateMessagingURL']({ env: 'sandbox' })).toEqual(
-      `wss://messaging.sandbox.selfid.net/v1/messaging`
+      `wss://messaging.sandbox.joinself.com/v1/messaging`
     )
   })
 

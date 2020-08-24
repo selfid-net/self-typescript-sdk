@@ -8,7 +8,7 @@ Due of its nature the authentication is an asynchronous process, where your prog
 
 ## Running this example
 
-In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.selfid.net/) when you create a new app.
+In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.joinself.com/) when you create a new app.
 
 Once you have your valid `SELF_APP_ID` and `SELF_APP_SECRET` you can run this example with:
 
@@ -24,7 +24,7 @@ Note you must provide a valid user self_id `your_self_id`, this exqample will se
 
 This diagram shows how does a SelfID authentication request process works internally.
 
-![Diagram](https://storage.googleapis.com/static.selfid.net/images/authentication_diagram.png)
+![Diagram](https://storage.googleapis.com/static.joinself.com/images/authentication_diagram.png)
 
 1. Request specific user authentication through self-sdk
 2. Self-SDK will send the authentication request to the specified user.

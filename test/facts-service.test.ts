@@ -22,7 +22,7 @@ describe('AuthenticationService', () => {
     let sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
 
-    let is = new IdentityService(jwt, 'https://api.selfid.net/')
+    let is = new IdentityService(jwt, 'https://api.joinself.com/')
 
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)

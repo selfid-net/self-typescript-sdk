@@ -4,7 +4,7 @@ Connections allows you manage who can interact with your app. Even your app is i
 
 ## Running this example
 
-In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.selfid.net/) when you create a new app.
+In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.joinself.com/) when you create a new app.
 
 Once you have your valid `SELF_APP_ID` and `SELF_APP_SECRET` you can run this example with:
 
