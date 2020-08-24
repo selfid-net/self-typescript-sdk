@@ -6,7 +6,7 @@ This prevents users to leak sensible information with untrusted peers and keep t
 
 ## Running this example
 
-In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.selfid.net/) when you create a new app.
+In order to run this example, you must have a valid app keypair. Self-keypairs are issued by [Self Developer portal](https://developer.joinself.com/) when you create a new app.
 
 Once you have your valid `SELF_APP_ID` and `SELF_APP_SECRET` you can run this example with:
 
@@ -18,7 +18,7 @@ $ tsc main.ts && SELF_APP_ID=XXXXX SELF_APP_SECRET=XXXXXXXX SELF_USER_ID="<your_
 
 This diagram shows how does zero knowledge information request process works internally.
 
-![Diagram](https://storage.googleapis.com/static.selfid.net/images/intermediary_fact_request_diagram.png)
+![Diagram](https://storage.googleapis.com/static.joinself.com/images/intermediary_fact_request_diagram.png)
 
 1. Request zero knowledge information through the self SDK with the data you want to attest like age > 18.
 2. SDK will send an information request to the intermediary.

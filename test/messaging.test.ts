@@ -20,7 +20,7 @@ describe('jwt', () => {
     sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
 
     jwt = await Jwt.build('appID', sk, { ntp: false })
-    is = new IdentityService(jwt, 'https://api.selfid.net/')
+    is = new IdentityService(jwt, 'https://api.joinself.com/')
 
     ms = new Messaging('', jwt, is)
   })
