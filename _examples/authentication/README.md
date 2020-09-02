@@ -24,7 +24,7 @@ Note you must provide a valid user self_id `your_self_id`, this exqample will se
 
 This diagram shows how does a SelfID authentication request process works internally.
 
-![Diagram](https://storage.googleapis.com/static.joinself.com/images/authentication_diagram.png)
+![Diagram](https://static.joinself.com/images/authentication_diagram.png)
 
 1. Request specific user authentication through self-sdk
 2. Self-SDK will send the authentication request to the specified user.
