@@ -112,11 +112,11 @@ export default class AuthenticationService {
     let encodedBody = this.jwt.encode(body)
 
     if (this.env === '') {
-      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app`
+      return `https://joinself.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=com.joinself.app`
     } else if (this.env === 'development') {
-      return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.dev`
+      return `https://joinself.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=com.joinself.app.dev`
     }
-    return `https://selfid.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=net.selfid.app.${this.env}`
+    return `https://joinself.page.link/?link=${callback}%3Fqr=${encodedBody}&apn=com.joinself.app.${this.env}`
   }
 
   /**
