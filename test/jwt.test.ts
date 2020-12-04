@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import Jwt from '../src/jwt'
 import SelfSDK from '../src/self-sdk'
 

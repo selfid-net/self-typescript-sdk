@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 const at = {
   payload:
     'eyJzdWIiOiI4NDA5OTcyNDA2OCIsImlzcyI6InNlbGZfdmVyaWZpY2F0aW9uIiwic291cmNlIjoidXNlcl9zcGVjaWZpZWQiLCJmYWN0IjoicGhvbmVfbnVtYmVyIiwicGhvbmVfbnVtYmVyIjoiKzQ0MTIzNDU2Nzg5MCJ9',

@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import SelfSDK from 'self-sdk'
 import { exit } from 'process';
 

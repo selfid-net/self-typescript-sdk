@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import Fact from './fact'
 import Jwt from './jwt'
 import IdentityService from './identity-service'

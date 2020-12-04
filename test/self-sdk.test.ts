@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import SelfSDK from '../src/self-sdk'
 import AuthenticationService from '../src/authentication-service'
 import FactsService from '../src/facts-service'

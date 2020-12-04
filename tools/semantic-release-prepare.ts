@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 const path = require("path")
 const { fork } = require("child_process")
 const colors = require("colors")
