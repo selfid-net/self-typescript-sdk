@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import Jwt from './jwt'
 import { v4 as uuidv4 } from 'uuid'
 

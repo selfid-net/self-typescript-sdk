@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 const { cd, exec, echo, touch } = require("shelljs")
 const { readFileSync } = require("fs")
 const url = require("url")

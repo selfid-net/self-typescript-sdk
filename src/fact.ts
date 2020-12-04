@@ -1,3 +1,5 @@
+// Copyright 2020 Self Group Ltd. All Rights Reserved.
+
 import Attestation from './attestation'
 import Jwt from './jwt'
 import IdentityService from './identity-service'
