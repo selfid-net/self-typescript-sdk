@@ -187,6 +187,12 @@ export default class FactsService {
     let cid = options.cid ? options.cid : uuidv4()
     let expTimeout = options.exp ? options.exp : 300000
 
+    facts.forEach(f => {
+      if (!f.isValid()) {
+        throw new TypeError('invalid facts')
+      }
+    })
+
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))
     let exp = new Date(Math.floor(this.jwt.now() + expTimeout * 60))
