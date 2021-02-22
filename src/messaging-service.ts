@@ -56,7 +56,6 @@ export default class MessagingService {
   async permitConnection(selfid: string): Promise<boolean | Response> {
     console.log('permitting connection')
     let someYears = 999 * 365 * 24 * 60 * 60 * 1000
-    let exp = new Date(Math.floor(this.jwt.now() + someYears))
 
     let payload = this.jwt.prepare({
       jti: uuidv4(),
@@ -64,8 +63,10 @@ export default class MessagingService {
       typ: 'acl.permit',
       iss: this.jwt.appID,
       sub: this.jwt.appID,
+      iat: new Date(Math.floor(this.jwt.now())).toISOString(),
+      exp: new Date(Math.floor(this.jwt.now() + 1 * 60)).toISOString(),
       acl_source: selfid,
-      acl_exp: exp.toISOString()
+      acl_exp: new Date(Math.floor(this.jwt.now() + someYears)).toISOString()
     })
 
     const msg = new AccessControlList()
@@ -116,6 +117,8 @@ export default class MessagingService {
     let payload = this.jwt.prepare({
       iss: this.jwt.appID,
       sub: this.jwt.appID,
+      iat: new Date(Math.floor(this.jwt.now())).toISOString(),
+      exp: new Date(Math.floor(this.jwt.now() + 1 * 60)).toISOString(),
       acl_source: selfid,
       jti: uuidv4(),
       cid: uuidv4(),

@@ -10,6 +10,7 @@ import FactResponse from './fact-response'
 
 import * as fs from 'fs'
 import { openStdin } from 'process'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
@@ -193,7 +194,7 @@ export default class Messaging {
 
     const msg = new Auth()
     msg.setType(MsgType.AUTH)
-    msg.setId('authentication')
+    msg.setId(uuidv4())
     msg.setToken(token)
     msg.setOffset(this.getOffset())
     msg.setDevice(this.jwt.deviceID)

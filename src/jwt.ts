@@ -14,6 +14,7 @@ export interface JwtInput {
 export default class Jwt {
   appID: string
   appKey: string
+  appKeyID: string
   deviceID: string
   sodium: any
   keypair: any
@@ -24,13 +25,17 @@ export default class Jwt {
   constructor() {
     this.appID = ''
     this.appKey = ''
+    this.appKeyID = '1'
     this.deviceID = '1'
   }
 
   public static async build(appID: string, appKey: string, opts?: { ntp?: boolean }): Promise<Jwt> {
     let jwt = new Jwt()
     jwt.appID = appID
-    jwt.appKey = appKey
+
+    let appkeyParts = appKey.split(':')
+    jwt.appKeyID = appkeyParts[0]
+    jwt.appKey = appkeyParts[1]
 
     /* istanbul ignore next */
     opts = opts ? opts : {}
@@ -141,7 +146,7 @@ export default class Jwt {
   }
 
   private header() {
-    return this.encode(`{"alg":"EdDSA","typ":"JWT"}`)
+    return this.encode(`{"alg":"EdDSA","typ":"JWT","kid":"` + this.appKeyID + `"}`)
   }
 
   encode(input: string) {
