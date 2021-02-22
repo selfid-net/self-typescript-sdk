@@ -89,7 +89,7 @@ export default class MessagingService {
    * Lists the current connections of your app.
    * @returns a list of ACL rules
    */
-  async allowedConnections(): Promise<ACLRule[]> {
+  async allowedConnections(): Promise<String[]> {
     console.log('listing allowed connections')
     let connections: ACLRule[] = []
 
@@ -99,11 +99,8 @@ export default class MessagingService {
     msg.setCommand(ACLCommand.LIST)
 
     let res = await this.ms.request(msg.getId(), msg.serializeBinary())
-    for (let c of res) {
-      connections[c.acl_source] = c.acl_exp
-    }
 
-    return connections
+    return res
   }
 
   /**
