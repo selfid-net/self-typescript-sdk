@@ -56,6 +56,13 @@ export default class FactsService {
     facts: Fact[],
     opts?: { cid?: string; exp?: number; async?: boolean }
   ): Promise<FactResponse | boolean> {
+    let app = await this.is.app(this.jwt.appID)
+    if (app.paid_actions == false) {
+      throw new Error(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    }
+
     let id = uuidv4()
 
     // Get user's device

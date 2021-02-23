@@ -51,6 +51,13 @@ export default class AuthenticationService {
     selfid: string,
     opts?: { cid?: string; async?: boolean }
   ): Promise<boolean | string> {
+    let app = await this.is.app(this.jwt.appID)
+    if (app.paid_actions == false) {
+      throw new Error(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    }
+
     let id = uuidv4()
 
     // Get user's device

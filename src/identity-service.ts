@@ -19,6 +19,18 @@ type Identity = {
 }
 
 /**
+ * An app object representing both apps.
+ */
+type App = {
+  id: string
+  publicKeys: PublicKey[]
+  name: string
+  image: string
+  paid_actions: boolean
+  core: boolean
+}
+
+/**
  * A service to manage all requests against Self servers.
  */
 export default class IdentityService {
@@ -116,6 +128,35 @@ export default class IdentityService {
       }
 
       response = await axios.get(`${this.url}/v1/identities/${selfid}`, options)
+    } catch (error) {
+      throw this.errInternal
+    }
+
+    if (response.status === 200) {
+      identity = response.data
+      identity.publicKeys = response.data.public_keys
+      delete identity.public_keys
+    } else if (response.status === 401) {
+      throw this.errUnauthorized
+    } else if (response.status === 404) {
+      throw this.errUnexistingIdentity
+    }
+
+    return identity
+  }
+
+  async app(selfid: string): Promise<App> {
+    let identity: any
+    let response: any
+
+    try {
+      const axios = require('axios').default
+
+      const options = {
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      }
+
+      response = await axios.get(`${this.url}/v1/apps/${selfid}`, options)
     } catch (error) {
       throw this.errInternal
     }
