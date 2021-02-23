@@ -19,7 +19,7 @@ describe('jwt', () => {
 
   beforeEach(async () => {
     pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
-    sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
 
     jwt = await Jwt.build('appID', sk, { ntp: false })
     is = new IdentityService(jwt, 'https://api.joinself.com/')
@@ -192,7 +192,6 @@ describe('jwt', () => {
           let msg = Message.deserializeBinary(input.valueOf() as Uint8Array)
 
           expect(msg.getType()).toEqual(MsgType.AUTH)
-          expect(msg.getId()).toEqual('authentication')
 
           // Stop listening for response
           let req = ms.requests.get(msg.getId())

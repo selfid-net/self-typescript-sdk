@@ -14,7 +14,7 @@ describe('jwt', () => {
 
   beforeEach(async () => {
     pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
-    sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
   })
 
@@ -47,8 +47,8 @@ describe('jwt', () => {
 
   it('prepares a message to be sent', () => {
     let output = jwt.prepare({ random: 'object' })
-    let expectation =
-      'eyJwYXlsb2FkIjoiZXlKeVlXNWtiMjBpT2lKdlltcGxZM1FpZlEiLCJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0luUjVjQ0k2SWtwWFZDSjkiLCJzaWduYXR1cmUiOiJoREhaemg1bTZVUzRlNWZmOU9YUkNuU2d4N3M5UjFyY1EwS2hxVGtsWHU3d01QTDJEVHY5aWF3cENuMEpKS2FOcWFaSDBZZnNZM2JnR1diNmVfYWhEUSJ9'
-    expect(output).toEqual(expectation)
+    expect(output).toEqual(
+      'eyJwYXlsb2FkIjoiZXlKeVlXNWtiMjBpT2lKdlltcGxZM1FpZlEiLCJwcm90ZWN0ZWQiOiJleUpoYkdjaU9pSkZaRVJUUVNJc0luUjVjQ0k2SWtwWFZDSXNJbXRwWkNJNklqRWlmUSIsInNpZ25hdHVyZSI6IkNHS3NkenFEMnZIVTBvU3lkaFpGckJaNGUyM0otcGFKRGQ0YmRfQ0hUZ0s1MS00RXh4anhXSUM0TXY2WjNMMnpfQnFDSzllZGl6Z3NEYkNsQTF6X0JBIn0'
+    )
   })
 })

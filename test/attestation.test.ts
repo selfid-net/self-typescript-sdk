@@ -17,7 +17,7 @@ describe('jwt', () => {
 
   beforeEach(async () => {
     pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
-    sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
     is = new IdentityService(jwt, 'https://api.joinself.com/')
   })

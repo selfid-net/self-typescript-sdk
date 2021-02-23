@@ -21,7 +21,7 @@ describe('AuthenticationService', () => {
 
   beforeEach(async () => {
     let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
-    let sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
 
     let is = new IdentityService(jwt, 'https://api.joinself.com/')
@@ -55,7 +55,7 @@ describe('AuthenticationService', () => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.valueOf() as Uint8Array)
+          let msg = Message.deserializeBinary(data[0].valueOf() as Uint8Array)
 
           // Envelope
           expect(msg.getId().length).toEqual(36)
@@ -98,7 +98,7 @@ describe('AuthenticationService', () => {
           // The cid is automatically generated
           expect(cid).toEqual('cid')
           // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.valueOf() as Uint8Array)
+          let msg = Message.deserializeBinary(data[0].valueOf() as Uint8Array)
           let input = msg.getCiphertext_asB64()
           let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
           let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())

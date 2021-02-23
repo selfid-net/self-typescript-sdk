@@ -20,7 +20,7 @@ describe('Messaging service', () => {
 
   beforeEach(async () => {
     let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
-    let sk = 'GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
 
     let is = new IdentityService(jwt, 'https://api.joinself.com/')
@@ -120,13 +120,13 @@ describe('Messaging service', () => {
           expect(msg.getCommand()).toEqual(ACLCommand.LIST)
 
           return new Promise(resolve => {
-            resolve([{ acl_source: 'source', acl_exp: 'xxxx' }])
+            resolve(['a', 'b'])
           })
         }
       )
 
       let res = await mss.allowedConnections()
-      expect(res['source']).toEqual('xxxx')
+      expect(res).toEqual(['a', 'b'])
     })
   })
 
