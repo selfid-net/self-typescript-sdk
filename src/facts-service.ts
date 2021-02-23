@@ -64,25 +64,34 @@ export default class FactsService {
     let j = this.buildRequest(selfid, facts, opts)
     let ciphertext = this.jwt.prepare(j)
 
-    // Envelope
-    const msg = new Message()
-    msg.setType(MsgType.MSG)
-    msg.setId(id)
-    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
-    msg.setRecipient(`${selfid}:${devices[0]}`)
-    msg.setCiphertext(ciphertext)
+    var msgs = []
+    devices.forEach(d => {
+      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+      msgs.push(msg.serializeBinary())
+    })
 
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
     if (as) {
-      console.log('sending ' + j.cid)
-      let res = this.ms.send(j.cid, { data: msg.serializeBinary(), waitForResponse: false })
+      console.log('sending ' + id)
+      let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
       return true
     }
-    console.log('requesting ' + j.cid)
-    let res = await this.ms.request(j.cid, msg.serializeBinary())
+    console.log('requesting ' + id)
+    let res = await this.ms.request(j.cid, msgs)
 
     return res
+  }
+
+  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+    const msg = new Message()
+    msg.setType(MsgType.MSG)
+    msg.setId(id)
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    msg.setRecipient(`${selfid}:${device}`)
+    msg.setCiphertext(ciphertext)
+
+    return msg
   }
 
   /**
@@ -188,7 +197,7 @@ export default class FactsService {
     let expTimeout = options.exp ? options.exp : 300000
 
     facts.forEach(f => {
-      if (!f.isValid()) {
+      if (!Fact.isValid(f)) {
         throw new TypeError('invalid facts')
       }
     })

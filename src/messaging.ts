@@ -13,7 +13,7 @@ import { openStdin } from 'process'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface Request {
-  data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+  data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
   acknowledged?: boolean
   waitForResponse?: boolean
   responded?: boolean
@@ -220,7 +220,7 @@ export default class Messaging {
 
   async request(
     id: string,
-    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView
+    data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
   ): Promise<any> {
     return this.send_and_wait(id, {
       data: data,
@@ -229,7 +229,13 @@ export default class Messaging {
   }
 
   send(id: string, request: Request) {
-    this.ws.send(request.data)
+    if (!Array.isArray(request.data)) {
+      this.ws.send(request.data)
+    } else {
+      request.data.forEach(data => {
+        this.ws.send(data)
+      })
+    }
 
     this.requests.set(id, request)
   }

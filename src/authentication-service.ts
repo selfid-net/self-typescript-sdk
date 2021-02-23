@@ -59,26 +59,35 @@ export default class AuthenticationService {
     let j = this.buildRequest(selfid, opts)
     let ciphertext = this.jwt.prepare(j)
 
-    // Envelope
-    const msg = new Message()
-    msg.setType(MsgType.MSG)
-    msg.setId(id)
-    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
-    msg.setRecipient(`${selfid}:${devices[0]}`)
-    msg.setCiphertext(ciphertext)
+    var msgs = []
+    devices.forEach(d => {
+      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+      msgs.push(msg.serializeBinary())
+    })
 
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
     if (as) {
-      console.log('sending ' + msg.getId())
-      let res = this.ms.send(j.cid, { data: msg.serializeBinary(), waitForResponse: false })
+      console.log('sending ' + id)
+      let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
       return true
     }
 
-    console.log('requesting ' + msg.getId())
-    let res = await this.ms.request(j.cid, msg.serializeBinary())
+    console.log('requesting ' + id)
+    let res = await this.ms.request(j.cid, msgs)
 
     return res.status === 'accepted'
+  }
+
+  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+    const msg = new Message()
+    msg.setType(MsgType.MSG)
+    msg.setId(id)
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    msg.setRecipient(`${selfid}:${device}`)
+    msg.setCiphertext(ciphertext)
+
+    return msg
   }
 
   /**
