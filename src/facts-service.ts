@@ -71,7 +71,8 @@ export default class FactsService {
     }
 
     if (as == false) {
-      if (!this.messagingService.isPermited(selfid)) {
+      let permited = await this.messagingService.isPermited(selfid)
+      if (!permited) {
         throw new Error("You're not permitting connections from " + selfid)
       }
     }

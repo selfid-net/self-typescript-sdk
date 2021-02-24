@@ -17,6 +17,7 @@ describe('AuthenticationService', () => {
   let fs: FactsService
   let jwt: Jwt
   let ms: Messaging
+  let is: IdentityService
   let messagingService: MessagingService
   let mockServer: Server
   let URL = require('url').URL
@@ -26,7 +27,7 @@ describe('AuthenticationService', () => {
     let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
 
-    let is = new IdentityService(jwt, 'https://api.joinself.com/')
+    is = new IdentityService(jwt, 'https://api.joinself.com/')
 
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
@@ -52,6 +53,20 @@ describe('AuthenticationService', () => {
         status: 200,
         data: ['deviceID']
       })
+      jest.spyOn(is, 'app').mockImplementation(
+        (appID: string): Promise<any> => {
+          return new Promise(resolve => {
+            resolve({ paid_actions: true })
+          })
+        }
+      )
+      jest.spyOn(messagingService, 'isPermited').mockImplementation(
+        (selfid: string): Promise<Boolean> => {
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
         (cid: string, data): Promise<any> => {
@@ -88,6 +103,62 @@ describe('AuthenticationService', () => {
       expect(res).toBeTruthy()
     })
 
+    it('fails when not enough credits', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+      jest.spyOn(is, 'app').mockImplementation(
+        (appID: string): Promise<any> => {
+          return new Promise(resolve => {
+            resolve({ paid_actions: false })
+          })
+        }
+      )
+      jest.spyOn(is, 'app').mockImplementation(
+        (appID: string): Promise<any> => {
+          return new Promise(resolve => {
+            resolve({ paid_actions: false })
+          })
+        }
+      )
+
+      await expect(fs.request('selfid', [{ fact: 'phone_number' }])).rejects.toThrowError(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    })
+
+    it('fails when callback connection is not permitted', async () => {
+      const axios = require('axios')
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: ['deviceID']
+      })
+
+      jest.spyOn(is, 'app').mockImplementation(
+        (appID: string): Promise<any> => {
+          return new Promise(resolve => {
+            resolve({ paid_actions: true })
+          })
+        }
+      )
+
+      jest.spyOn(messagingService, 'isPermited').mockImplementation(
+        (selfid: string): Promise<Boolean> => {
+          return new Promise(resolve => {
+            resolve(false)
+          })
+        }
+      )
+
+      await expect(fs.request('selfid', [{ fact: 'phone_number' }])).rejects.toThrowError(
+        "You're not permitting connections from selfid"
+      )
+    })
+
     it('happy path with custom cid', async () => {
       const axios = require('axios')
       jest.mock('axios')
@@ -95,6 +166,20 @@ describe('AuthenticationService', () => {
         status: 200,
         data: ['deviceID']
       })
+      jest.spyOn(is, 'app').mockImplementation(
+        (appID: string): Promise<any> => {
+          return new Promise(resolve => {
+            resolve({ paid_actions: true })
+          })
+        }
+      )
+      jest.spyOn(messagingService, 'isPermited').mockImplementation(
+        (selfid: string): Promise<Boolean> => {
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
         (cid: string, data): Promise<any> => {
