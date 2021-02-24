@@ -29,6 +29,38 @@ const SOURCE_PASSPORT = 'passport'
 const SOURCE_DRIVING_LICENSE = 'driving_license'
 const SOURCE_IDENTITY_CARD = 'identity_card'
 
+let validSources = [
+  SOURCE_USER_SPECIFIED,
+  SOURCE_PASSPORT,
+  SOURCE_DRIVING_LICENSE,
+  SOURCE_IDENTITY_CARD
+]
+let factsForPassport = [
+  FACT_DOCUMENT_NUMBER,
+  FACT_SURNAME,
+  FACT_GIVEN_NAMES,
+  FACT_DATE_OF_BIRTH,
+  FACT_DATE_OF_EXPIRATION,
+  FACT_SEX,
+  FACT_NATIONALITY,
+  FACT_COUNTRY_OF_ISSUANCE
+]
+
+let factsForDL = [
+  FACT_DOCUMENT_NUMBER,
+  FACT_SURNAME,
+  FACT_GIVEN_NAMES,
+  FACT_DATE_OF_BIRTH,
+  FACT_DATE_OF_ISSUANCE,
+  FACT_DATE_OF_EXPIRATION,
+  FACT_ADDRESS,
+  FACT_ISSUING_AUTHORITY,
+  FACT_PLACE_OF_BIRTH,
+  FACT_COUNTRY_OF_ISSUANCE
+]
+
+let factsForUser = [FACT_DOCUMENT_NUMBER, FACT_DISPLAY_NAME, FACT_EMAIL, FACT_PHONE]
+
 export default class Fact {
   fact: string
   operator?: string
@@ -72,64 +104,40 @@ export default class Fact {
       return false
     }
 
-    let validSources = [
-      SOURCE_USER_SPECIFIED,
-      SOURCE_PASSPORT,
-      SOURCE_DRIVING_LICENSE,
-      SOURCE_IDENTITY_CARD
-    ]
-    let factsForPassport = [
-      FACT_DOCUMENT_NUMBER,
-      FACT_SURNAME,
-      FACT_GIVEN_NAMES,
-      FACT_DATE_OF_BIRTH,
-      FACT_DATE_OF_EXPIRATION,
-      FACT_SEX,
-      FACT_NATIONALITY,
-      FACT_COUNTRY_OF_ISSUANCE
-    ]
-
-    let factsForDL = [
-      FACT_DOCUMENT_NUMBER,
-      FACT_SURNAME,
-      FACT_GIVEN_NAMES,
-      FACT_DATE_OF_BIRTH,
-      FACT_DATE_OF_ISSUANCE,
-      FACT_DATE_OF_EXPIRATION,
-      FACT_ADDRESS,
-      FACT_ISSUING_AUTHORITY,
-      FACT_PLACE_OF_BIRTH,
-      FACT_COUNTRY_OF_ISSUANCE
-    ]
-
-    let factsForUser = [FACT_DOCUMENT_NUMBER, FACT_DISPLAY_NAME, FACT_EMAIL, FACT_PHONE]
-
-    if (input.sources != undefined) {
+    let valid = true
+    if (input.sources == undefined) {
+      if ([...factsForPassport, ...factsForDL, ...factsForUser].includes(input.fact) == false) {
+        valid = false
+      }
+    } else {
       input.sources.forEach(s => {
-        if (validSources.includes(s)) {
+        if (!validSources.includes(s)) {
           throw new TypeError(errInvalidSource)
         }
         if (s == SOURCE_PASSPORT || s == SOURCE_IDENTITY_CARD) {
           if (!factsForPassport.includes(input.fact)) {
             console.log(errInvalidFactToSource)
-            return false
+            valid = false
+            return
           }
         }
         if (s == SOURCE_DRIVING_LICENSE) {
           if (!factsForDL.includes(input.fact)) {
             console.log(errInvalidFactToSource)
-            return false
+            valid = false
+            return
           }
         }
         if (s == SOURCE_USER_SPECIFIED) {
           if (!factsForUser.includes(input.fact)) {
             console.log(errInvalidFactToSource)
-            return false
+            valid = false
+            return
           }
         }
       })
     }
 
-    return true
+    return valid
   }
 }
