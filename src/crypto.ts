@@ -86,7 +86,7 @@ export default class Crypto {
 
     // # 5) encrypt a message
     // gs.encrypt(message).to_s
-    return ''
+    return message
   }
 
   public decrypt(message: string, sender: string, sender_device: string): string {
@@ -115,6 +115,6 @@ export default class Crypto {
     // # 10) decrypt the message ciphertext
     // gs.decrypt("#{sender}:#{sender_device}", message).to_s
     // end
-    return ''
+    return message
   }
 }
