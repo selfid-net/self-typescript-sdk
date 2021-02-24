@@ -104,6 +104,23 @@ export default class MessagingService {
   }
 
   /**
+   * Checks if the current app is allowing incoming messages from the given id.
+   * @param id the self identifier to be checked
+   */
+  async isPermited(id: string): Promise<Boolean> {
+    let ac = await this.allowedConnections()
+    if (ac.includes('*')) {
+      return true
+    }
+
+    if (ac.includes(id)) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
    * Revokes messages from the given identity
    * @param selfid identity to revoke
    * @returns Response

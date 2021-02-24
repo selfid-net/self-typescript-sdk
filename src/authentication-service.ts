@@ -16,6 +16,7 @@ import Messaging from './messaging'
 
 import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
+import MessagingService from './messaging-service'
 
 type MessageProcessor = (n: number) => any
 
@@ -27,6 +28,7 @@ export default class AuthenticationService {
   ms: Messaging
   is: IdentityService
   env: string
+  messagingService: MessagingService
 
   /**
    * Constructs the AuthenticationService
@@ -35,11 +37,12 @@ export default class AuthenticationService {
    * @param is the IdentityService
    * @param env the environment on what you want to run your app.
    */
-  constructor(jwt: Jwt, ms: Messaging, is: IdentityService, env: string) {
+  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, env: string) {
     this.jwt = jwt
-    this.ms = ms
+    this.ms = ms.ms
     this.is = is
     this.env = env
+    this.messagingService = ms
   }
 
   /**
@@ -51,11 +54,20 @@ export default class AuthenticationService {
     selfid: string,
     opts?: { cid?: string; async?: boolean }
   ): Promise<boolean | string> {
+    let options = opts ? opts : {}
+    let as = options.async ? options.async : false
+
     let app = await this.is.app(this.jwt.appID)
     if (app.paid_actions == false) {
       throw new Error(
         'Your credits have expired, please log in to the developer portal and top up your account.'
       )
+    }
+
+    if (as == false) {
+      if (!this.messagingService.isPermited(selfid)) {
+        throw new Error("You're not permitting connections from " + selfid)
+      }
     }
 
     let id = uuidv4()
@@ -72,8 +84,6 @@ export default class AuthenticationService {
       msgs.push(msg.serializeBinary())
     })
 
-    let options = opts ? opts : {}
-    let as = options.async ? options.async : false
     if (as) {
       console.log('sending ' + id)
       let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })

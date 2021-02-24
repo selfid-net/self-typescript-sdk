@@ -91,10 +91,10 @@ export default class SelfSDK {
 
     let options = opts ? opts : {}
     let env = options.env ? options.env : '-'
-    sdk.factsService = new FactsService(sdk.jwt, sdk.messagingService.ms, sdk.identityService, env)
+    sdk.factsService = new FactsService(sdk.jwt, sdk.messagingService, sdk.identityService, env)
     sdk.authenticationService = new AuthenticationService(
       sdk.jwt,
-      sdk.messagingService.ms,
+      sdk.messagingService,
       sdk.identityService,
       env
     )

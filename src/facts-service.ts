@@ -17,6 +17,7 @@ import Fact from './fact'
 import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
+import MessagingService from './messaging-service'
 
 type MessageProcessor = (n: number) => any
 
@@ -30,6 +31,7 @@ export default class FactsService {
   ms: Messaging
   is: IdentityService
   env: string
+  messagingService: MessagingService
 
   /**
    * The constructor for FactsService
@@ -38,9 +40,10 @@ export default class FactsService {
    * @param is the IdentityService
    * @param env the environment on what you want to run your app.
    */
-  constructor(jwt: Jwt, ms: Messaging, is: IdentityService, env: string) {
+  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, env: string) {
     this.jwt = jwt
-    this.ms = ms
+    this.ms = ms.ms
+    this.messagingService = ms
     this.is = is
     this.env = env
   }
@@ -56,11 +59,21 @@ export default class FactsService {
     facts: Fact[],
     opts?: { cid?: string; exp?: number; async?: boolean }
   ): Promise<FactResponse | boolean> {
+    let options = opts ? opts : {}
+    let as = options.async ? options.async : false
+
+    // Check if the current app still has credits
     let app = await this.is.app(this.jwt.appID)
     if (app.paid_actions == false) {
       throw new Error(
         'Your credits have expired, please log in to the developer portal and top up your account.'
       )
+    }
+
+    if (as == false) {
+      if (!this.messagingService.isPermited(selfid)) {
+        throw new Error("You're not permitting connections from " + selfid)
+      }
     }
 
     let id = uuidv4()
@@ -77,8 +90,6 @@ export default class FactsService {
       msgs.push(msg.serializeBinary())
     })
 
-    let options = opts ? opts : {}
-    let as = options.async ? options.async : false
     if (as) {
       console.log('sending ' + id)
       let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })

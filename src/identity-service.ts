@@ -117,35 +117,18 @@ export default class IdentityService {
    * @param selfid self identifier for the identity.
    */
   async get(selfid: string): Promise<Identity> {
-    let identity: any
-    let response: any
-
-    try {
-      const axios = require('axios').default
-
-      const options = {
-        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
-      }
-
-      response = await axios.get(`${this.url}/v1/identities/${selfid}`, options)
-    } catch (error) {
-      throw this.errInternal
-    }
-
-    if (response.status === 200) {
-      identity = response.data
-      identity.publicKeys = response.data.public_keys
-      delete identity.public_keys
-    } else if (response.status === 401) {
-      throw this.errUnauthorized
-    } else if (response.status === 404) {
-      throw this.errUnexistingIdentity
-    }
-
-    return identity
+    return <Promise<Identity>>this.getIdentity(selfid, 'identities')
   }
 
+  /**
+   * Gets the details of a specific app.
+   * @param selfid self identifier for the app.
+   */
   async app(selfid: string): Promise<App> {
+    return <Promise<App>>this.getIdentity(selfid, 'apps')
+  }
+
+  private async getIdentity(selfid: string, typ: string): Promise<Identity | App> {
     let identity: any
     let response: any
 
@@ -156,7 +139,7 @@ export default class IdentityService {
         headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
       }
 
-      response = await axios.get(`${this.url}/v1/apps/${selfid}`, options)
+      response = await axios.get(`${this.url}/v1/${typ}/${selfid}`, options)
     } catch (error) {
       throw this.errInternal
     }

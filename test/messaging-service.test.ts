@@ -130,6 +130,52 @@ describe('Messaging service', () => {
     })
   })
 
+  describe('MessagingService::isPermitted', () => {
+    it('permissions by id', async () => {
+      const msMock = jest.spyOn(ms, 'request').mockImplementation(
+        (cid: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(cid.length).toEqual(36)
+          // The cid is automatically generated
+          let msg = AccessControlList.deserializeBinary(data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.ACL)
+          expect(msg.getCommand()).toEqual(ACLCommand.LIST)
+
+          return new Promise(resolve => {
+            resolve(['a', 'b'])
+          })
+        }
+      )
+
+      expect(await mss.isPermited('c')).toBeFalsy()
+      expect(await mss.isPermited('a')).toBeTruthy()
+    })
+    it('permissions by wildcard', async () => {
+      const msMock = jest.spyOn(ms, 'request').mockImplementation(
+        (cid: string, data): Promise<any | Response> => {
+          // The cid is automatically generated
+          expect(cid.length).toEqual(36)
+          // The cid is automatically generated
+          let msg = AccessControlList.deserializeBinary(data.valueOf() as Uint8Array)
+
+          // Envelope
+          expect(msg.getId().length).toEqual(36)
+          expect(msg.getType()).toEqual(MsgType.ACL)
+          expect(msg.getCommand()).toEqual(ACLCommand.LIST)
+
+          return new Promise(resolve => {
+            resolve(['*'])
+          })
+        }
+      )
+
+      expect(await mss.isPermited('a')).toBeTruthy()
+    })
+  })
+
   describe('MessagingService::subscribe', () => {
     it('happy path', async () => {
       const msMock = jest

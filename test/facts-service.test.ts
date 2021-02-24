@@ -4,6 +4,7 @@ import Jwt from '../src/jwt'
 import IdentityService from '../src/identity-service'
 import Messaging from '../src/messaging'
 import FactsService from '../src/facts-service'
+import MessagingService from '../src/messaging-service'
 
 import { WebSocket, Server } from 'mock-socket'
 import { Message } from 'self-protos/message_pb'
@@ -16,6 +17,7 @@ describe('AuthenticationService', () => {
   let fs: FactsService
   let jwt: Jwt
   let ms: Messaging
+  let messagingService: MessagingService
   let mockServer: Server
   let URL = require('url').URL
 
@@ -32,8 +34,9 @@ describe('AuthenticationService', () => {
     ms = new Messaging('', jwt, is)
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
+    messagingService = new MessagingService(jwt, ms, is)
 
-    fs = new FactsService(jwt, ms, is, 'test')
+    fs = new FactsService(jwt, messagingService, is, 'test')
   })
 
   afterEach(async () => {
