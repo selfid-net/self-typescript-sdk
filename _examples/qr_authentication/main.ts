@@ -1,11 +1,11 @@
 // Copyright 2020 Self Group Ltd. All Rights Reserved.
 
-import SelfSDK from 'self-sdk'
+import SelfSDK from '../../src/self-sdk'
 import { exit } from 'process';
 
 async function authenticate(appID: string, appSecret: string, selfID: string) {
-    const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", {env: "review"});
+    // const SelfSDK = require("self-sdk");
+    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
 
     sdk.authentication().subscribe((res: any): any => {
         if(res.status !== "accepted") {

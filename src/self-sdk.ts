@@ -16,6 +16,7 @@ export default class SelfSDK {
   appID: string
   appKey: string
   storageKey: string
+  storageFolder: string
   baseURL: string
   messagingURL: string
   autoReconnect: boolean
@@ -57,6 +58,7 @@ export default class SelfSDK {
    * @param appID your SELF_APP_ID
    * @param appKey your SELF_APP_SECRET
    * @param storageKey your SELF_STORAGE_KEY
+   * @param storageFolder the folder you want to use to store your self sessions.
    * @param opts optional parameters
    *  - baseURL : string with the baseURL you want to use
    *  - messagingURL : string the messaging url to be used
@@ -69,6 +71,7 @@ export default class SelfSDK {
     appID: string,
     appKey: string,
     storageKey: string,
+    storageFolder: string,
     opts?: {
       baseURL?: string
       messagingURL?: string

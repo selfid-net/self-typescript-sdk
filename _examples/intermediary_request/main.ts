@@ -5,7 +5,7 @@ import { exit } from 'process';
 
 async function request(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", {env: "review"});
+    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
 
     console.log("requesting facts through intermediary...")
     let res = await sdk.facts().requestViaIntermediary(selfID, [{

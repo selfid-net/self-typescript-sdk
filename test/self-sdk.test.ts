@@ -18,7 +18,10 @@ describe('SelfSDK test', () => {
   beforeEach(async () => {
     sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
 
-    sdk = await SelfSDK.build('appID', sk, 'random', { messagingURL: '', ntp: false })
+    sdk = await SelfSDK.build('appID', sk, 'random', '/tmp/.self_storage', {
+      messagingURL: '',
+      ntp: false
+    })
   })
 
   afterEach(async () => {
