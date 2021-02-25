@@ -17,6 +17,7 @@ import Messaging from './messaging'
 import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import MessagingService from './messaging-service'
+import Crypto from './crypto'
 
 type MessageProcessor = (n: number) => any
 
@@ -29,6 +30,7 @@ export default class AuthenticationService {
   is: IdentityService
   env: string
   messagingService: MessagingService
+  crypto: Crypto
 
   /**
    * Constructs the AuthenticationService
@@ -37,12 +39,13 @@ export default class AuthenticationService {
    * @param is the IdentityService
    * @param env the environment on what you want to run your app.
    */
-  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, env: string) {
+  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, ec: Crypto, env: string) {
     this.jwt = jwt
     this.ms = ms.ms
     this.is = is
     this.env = env
     this.messagingService = ms
+    this.crypto = ec
   }
 
   /**
@@ -103,7 +106,7 @@ export default class AuthenticationService {
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(ciphertext)
+    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
 
     return msg
   }

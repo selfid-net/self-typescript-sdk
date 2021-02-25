@@ -8,6 +8,7 @@ import IdentityService from './identity-service'
 import MessagingService from './messaging-service'
 import Jwt from './jwt'
 import Messaging from './messaging'
+import Crypto from './crypto'
 
 /**
  * SelfSDK allow you interact with self network.
@@ -27,6 +28,7 @@ export default class SelfSDK {
   private factsService: any
   private identityService: any
   private messagingService: any
+  private encryptionClient: Crypto
 
   defaultBaseURL = 'https://api.joinself.com'
   defaultMessagingURL = 'wss://messaging.joinself.com/v1/messaging'
@@ -84,21 +86,46 @@ export default class SelfSDK {
     sdk.jwt = await Jwt.build(appID, appKey, opts)
 
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
+    sdk.encryptionClient = new Crypto(
+      sdk.identityService,
+      sdk.jwt.deviceID,
+      storageFolder,
+      storageKey
+    )
     if (sdk.messagingURL === '') {
-      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService, {})
+      sdk.ms = new Messaging(
+        sdk.messagingURL,
+        sdk.jwt,
+        sdk.identityService,
+        sdk.encryptionClient,
+        {}
+      )
     } else {
-      sdk.ms = await Messaging.build(sdk.messagingURL, sdk.jwt, sdk.identityService, {})
+      sdk.ms = await Messaging.build(
+        sdk.messagingURL,
+        sdk.jwt,
+        sdk.identityService,
+        sdk.encryptionClient,
+        {}
+      )
     }
 
     sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)
 
     let options = opts ? opts : {}
     let env = options.env ? options.env : '-'
-    sdk.factsService = new FactsService(sdk.jwt, sdk.messagingService, sdk.identityService, env)
+    sdk.factsService = new FactsService(
+      sdk.jwt,
+      sdk.messagingService,
+      sdk.identityService,
+      sdk.encryptionClient,
+      env
+    )
     sdk.authenticationService = new AuthenticationService(
       sdk.jwt,
       sdk.messagingService,
       sdk.identityService,
+      sdk.encryptionClient,
       env
     )
 

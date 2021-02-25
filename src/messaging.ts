@@ -6,6 +6,7 @@ import IdentityService from './identity-service'
 import { Auth } from 'self-protos/auth_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
+import Crypto from './crypto'
 import FactResponse from './fact-response'
 
 import * as fs from 'fs'
@@ -29,14 +30,22 @@ export default class Messaging {
   callbacks: Map<string, (n: any) => any>
   is: IdentityService
   offsetPath: string
+  encryptionClient: Crypto
 
-  constructor(url: string, jwt: Jwt, is: IdentityService, opts?: { storageDir?: string }) {
+  constructor(
+    url: string,
+    jwt: Jwt,
+    is: IdentityService,
+    ec: Crypto,
+    opts?: { storageDir?: string }
+  ) {
     this.jwt = jwt
     this.url = url
     this.requests = new Map()
     this.callbacks = new Map()
     this.connected = false
     this.is = is
+    this.encryptionClient = ec
     this.offsetPath = `${process.cwd()}/.self_storage`
     if (opts) {
       if ('storageDir' in opts) {
@@ -58,9 +67,10 @@ export default class Messaging {
     url: string,
     jwt: Jwt,
     is: IdentityService,
+    ec: Crypto,
     opts?: { storageDir?: string }
   ): Promise<Messaging> {
-    let ms = new Messaging(url, jwt, is, opts)
+    let ms = new Messaging(url, jwt, is, ec, opts)
 
     await ms.setup()
 
@@ -73,10 +83,12 @@ export default class Messaging {
     await this.authenticate()
   }
 
-  private async processIncommingMessage(input: string, offset: number) {
+  private async processIncommingMessage(input: string, offset: number, sender: string) {
     try {
       let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
       let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      let issuer = sender.split(':')
+      this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
 
       let pks = await this.is.publicKeys(payload.iss)
       if (!this.jwt.verify(ciphertext, pks[0].key)) {
@@ -161,7 +173,11 @@ export default class Messaging {
       }
       case MsgType.MSG: {
         console.log(`message received ${msg.getId()}`)
-        await this.processIncommingMessage(msg.getCiphertext_asB64(), msg.getOffset())
+        await this.processIncommingMessage(
+          msg.getCiphertext_asB64(),
+          msg.getOffset(),
+          msg.getSender()
+        )
         break
       }
     }

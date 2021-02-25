@@ -18,6 +18,7 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 import MessagingService from './messaging-service'
+import Crypto from './crypto'
 
 type MessageProcessor = (n: number) => any
 
@@ -32,6 +33,7 @@ export default class FactsService {
   is: IdentityService
   env: string
   messagingService: MessagingService
+  crypto: Crypto
 
   /**
    * The constructor for FactsService
@@ -40,12 +42,13 @@ export default class FactsService {
    * @param is the IdentityService
    * @param env the environment on what you want to run your app.
    */
-  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, env: string) {
+  constructor(jwt: Jwt, ms: MessagingService, is: IdentityService, ec: Crypto, env: string) {
     this.jwt = jwt
     this.ms = ms.ms
     this.messagingService = ms
     this.is = is
     this.env = env
+    this.crypto = ec
   }
 
   /**
@@ -108,7 +111,7 @@ export default class FactsService {
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(ciphertext)
+    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
 
     return msg
   }

@@ -1,5 +1,3 @@
-import fs from 'fs'
-
 import IdentityService from './identity-service'
 import crypto from 'self-crypto'
 
@@ -23,29 +21,28 @@ export default class Crypto {
     this.storage_key = storage_key
 
     let pickle_file = `${storage_folder}/account.pickle`
+    const fs = require('fs')
     if (fs.existsSync(pickle_file)) {
       // 1a) if alice's account file exists load the pickle from the file
       // @account = SelfCrypto::Account.from_pickle(File.read('account.pickle'), @storage_key)
-      let account = crypto.unpickle_account(pickle_file)
+      // let account = crypto.unpickle_account(pickle_file)
     } else {
       // 1b-i) if create a new account for alice if one doesn't exist already
       // @account = SelfCrypto::Account.from_seed(@client.jwt.key)
-      let account = crypto.create_olm_account_derrived_keys(this.client.jwt.appKey)
-
+      // let account = crypto.create_olm_account_derrived_keys(this.client.jwt.appKey)
       // 1b-ii) generate some keys for alice and publish them
       // @account.gen_otk(100)
-
       // 1b-iii) convert those keys to json
       // keys = @account.otk['curve25519'].map{|k,v| {id: k, key: v}}.to_json
-
       // 1b-iv) post those keys to POST /v1/identities/<selfid>/devices/1/pre_keys/
+      /*
       let keys: string[]
       this.client.postRaw(
         `${this.client.url}/v1/identities/${this.client.jwt.appID}/devices/1/pre_keys`,
         keys
       )
+      */
       // TODO: (@adriacidre) : do not save this file if the response is != 200
-
       // 1b-v) store the account to a file
       // File.write('account.pickle', @account.to_pickle(storage_key))
     }
@@ -53,6 +50,7 @@ export default class Crypto {
 
   public encrypt(message: string, recipient: string, recipient_device: string): string {
     let session_file_name = `${this.storage_folder}/${recipient}:${recipient_device}-session.pickle`
+    const fs = require('fs')
 
     if (fs.existsSync(session_file_name)) {
       // # 2a) if bob's session file exists load the pickle from the file
@@ -61,19 +59,17 @@ export default class Crypto {
       // # 2b-i) if you have not previously sent or recevied a message to/from bob,
       // #       you must get his identity key from GET /v1/identities/bob/
       // ed25519_identity_key = @client.public_keys(recipient).first[:key]
-      let ed25519_identity_key = this.client.publicKeys(recipient)[0].key
-
+      //let ed25519_identity_key = this.client.publicKeys(recipient)[0].key
       // # 2b-ii) get a one time key for bob
+      /*
       let one_time_key = this.client.getRaw(
         `${this.client.url}/v1/identities/${this.client.jwt.appID}/devices/${recipient_device}/pre_keys`
       ).key
-
+      */
       // # 2b-iii) convert bobs ed25519 identity key to a curve25519 key
       // curve25519_identity_key = SelfCrypto::Util.ed25519_pk_to_curve25519(ed25519_identity_key)
-
       // # 2b-iv) create the session with bob
       // session_with_bob = @account.outbound_session(curve25519_identity_key, one_time_key)
-
       // # 2b-v) store the session to a file
       // File.write(session_file_name, session_with_bob.to_pickle(@storage_key))
     }
@@ -91,6 +87,7 @@ export default class Crypto {
 
   public decrypt(message: string, sender: string, sender_device: string): string {
     let session_file_name = `${this.storage_folder}/${sender}:${sender_device}-session.pickle`
+    const fs = require('fs')
 
     if (fs.existsSync(session_file_name)) {
       // # 7a) if carol's session file exists load the pickle from the file

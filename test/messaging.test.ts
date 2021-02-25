@@ -6,16 +6,18 @@ import Messaging from '../src/messaging'
 import { WebSocket, Server } from 'mock-socket'
 import { Message } from 'self-protos/message_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
+import Crypto from '../src/crypto'
 
 /**
  * Attestation test
  */
-describe('jwt', () => {
+describe('messaging', () => {
   let jwt: Jwt
   let pk: any
   let sk: any
   let is: IdentityService
   let ms: Messaging
+  let ec: Crypto
 
   beforeEach(async () => {
     pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
@@ -23,8 +25,9 @@ describe('jwt', () => {
 
     jwt = await Jwt.build('appID', sk, { ntp: false })
     is = new IdentityService(jwt, 'https://api.joinself.com/')
+    ec = new Crypto(is, jwt.deviceID, '/tmp/', sk)
 
-    ms = new Messaging('', jwt, is)
+    ms = new Messaging('', jwt, is, ec)
   })
 
   afterEach(async () => {
@@ -63,7 +66,7 @@ describe('jwt', () => {
 
       let c =
         'eyJwYXlsb2FkIjoiZXlKbVlXTjBjeUk2VzNzaVptRmpkQ0k2SW5Cb2IyNWxYMjUxYldKbGNpSXNJbUYwZEdWemRHRjBhVzl1Y3lJNlczc2ljR0Y1Ykc5aFpDSTZJbVY1U25Ga1IydHBUMmxKTWs5SFNtaFBWRkV6VFhrd2QwMXFTbTFNVkZKcFRtcEZkRTlYV1RKWlV6QTFUa1JaTlU5WFdUVlBWMXB0V1RKRmFVeERTbnBrVjBscFQybEpORTVFUVRWUFZHTjVUa1JCTWs5RFNYTkpiV3g2WTNsSk5rbHVUbXhpUjFwbVpHMVdlV0ZYV25CWk1rWXdZVmM1ZFVscGQybGhWMFl3U1dwdmFVMXFRWGxOUXpCM1Rua3dlVTlXVVhkUFJHOTRUVlJ2ZUU1RE5EUk5WR3QzVFdwTk5FNXFVbUZKYVhkcFl6STVNV050VG14SmFtOXBaRmhPYkdOc09YcGpSMVpxWVZkYWNGcFhVV2xNUTBveVdsaEtjRnB0Ykd4YVEwazJaRWhLTVZwVGQybGpSMmgyWW0xV1ptSnVWblJaYlZaNVNXcHZhVXQ2VVRCTlZFbDZUa1JWTWs1Nlp6Vk5RMG81SWl3aWNISnZkR1ZqZEdWa0lqb2laWGxLYUdKSFkybFBhVXBHV2tWU1ZGRlRTamtpTENKemFXZHVZWFIxY21VaU9pSnVjMkkzZEZjMVNVUjFiRFpRVDA5MmJFeE5YMU5hUW5aMGVVaDFhVjlhZFRZMmIySkxha1ZzUWs1SldrNDJjREl4ZUhoNlMyTXlNVW94VUZkc1VVZzBNemhtUmpSQ2FVaENWVWxuWDFwc1JIZGtRMjlEWnlKOVhYMWRMQ0pxZEdraU9pSmhOREUwTVRWaE55MDVaR1U0TFRSak5EWXRPREkyTXkwME1UVmtNMlppWmpFeVptVWlMQ0pqYVdRaU9pSTFOamcwT0RkaVpDMDVNamN4TFRRelpHTXRPVFZoTUMwd05HUTBNR1F4WkdJek56RWlMQ0p6ZEdGMGRYTWlPaUpoWTJObGNIUmxaQ0lzSW5SNWNDSTZJbWxrWlc1MGFYUnBaWE11Wm1GamRITXVjWFZsY25rdWNtVnpjQ0lzSW1GMVpDSTZJakJtTmpGaFpqUTVORFpqTVRFeE5qTmhPRE0zWkRoaVpEaGtNbUU1WkRBMUlpd2liM0IwYVc5dWN5STZleUpzYjJOaGRHbHZibDlwWkNJNklpSXNJblpwYzJsMFgybGtJam9pTTJJNU1EYzJOamt0WVRneU55MDBOVEl3TFdGbFlqa3RPR1kzWXprMFpHTTVaamM1SW4wc0ltbHpjeUk2SWpnME1EazVOekkwTURZNElpd2ljM1ZpSWpvaU9EUXdPVGszTWpRd05qZ2lMQ0pwWVhRaU9pSXlNREl3TFRBNExUQTBWREUzT2pRME9qTXlXaUlzSW1WNGNDSTZJakl3TWpBdE1EZ3RNRGRVTVRjNk5EUTZNekphSW4wIiwicHJvdGVjdGVkIjoiZXlKaGJHY2lPaUpGWkVSVFFTSjkiLCJzaWduYXR1cmUiOiIzMkhRaUtLbjk0clFValFCNUVCN3ZBbWxyR3U5bjREaVdOaVNhSDRpV2kycndUZlllYjFXRDZWWEk1cWpCbUdQSjl6NGRqdUVlOXJmVDBvUXpNeDZBQSJ9'
-      await ms['processIncommingMessage'](c, 0)
+      await ms['processIncommingMessage'](c, 0, '1:1')
 
       await Promise.all([subscription])
     })
@@ -92,7 +95,7 @@ describe('jwt', () => {
 
       let c =
         'eyJwYXlsb2FkIjoiZXlKemRHRjBkWE1pT2lKaFkyTmxjSFJsWkNJc0luTjFZaUk2SWpnME1EazVOekkwTURZNElpd2lZWFZrSWpvaU1HWTJNV0ZtTkRrME5tTXhNVEUyTTJFNE16ZGtPR0prT0dReVlUbGtNRFVpTENKcGMzTWlPaUk0TkRBNU9UY3lOREEyT0NJc0ltTmhiR3hpWVdOcklqcHVkV3hzTENKcFlYUWlPaUl5TURJd0xUQTRMVEExVkRBM09qVXhPalF6V2lJc0ltVjRjQ0k2SWpJd01qQXRNRGd0TURoVU1EYzZOVEU2TkROYUlpd2lhblJwSWpvaU5qa3dNekkwTVdZdE9EQTJaaTAwWVRCaUxUazRNR1l0TjJNd01qQTVNMll4TVRJeElpd2lZMmxrSWpvaU5EQXpZVEF4TnpFdE9XUmpNQzAwWWpFMUxUa3dNR1l0TkRnNFlXVTBaR1poTVdWaklpd2laR1YyYVdObFgybGtJam9pWkVOWE5IcDBZbkZVU1drNFYxaHZRMUV3ZEVKa2RDSXNJblI1Y0NJNkltbGtaVzUwYVhScFpYTXVZWFYwYUdWdWRHbGpZWFJsTG5KbGMzQWlmUSIsInByb3RlY3RlZCI6ImV5SmhiR2NpT2lKRlpFUlRRU0o5Iiwic2lnbmF0dXJlIjoiSndUUm5hVlRqMlY0V0hMRF9aN1RVUWFnZWczMFZVdnhZQmZaSUZ4Q2FZMklQUHhnVnVncTRuT1QzTUdiTkhBakhPbGZtU0dla2dhRzkyV0dJOUhnQlEifQ=='
-      await ms['processIncommingMessage'](c, 0)
+      await ms['processIncommingMessage'](c, 0, '1:1')
 
       await Promise.all([subscription])
     })
@@ -112,7 +115,7 @@ describe('jwt', () => {
 
       let c =
         'eyJwYXlsb2FkIjoiZXlKbVlXTjBjeUk2VzNzaVptRmpkQ0k2SW5Cb2IyNWxYMjUxYldKbGNpSXNJbUYwZEdWemRHRjBhVzl1Y3lJNlczc2ljR0Y1Ykc5aFpDSTZJbVY1U25Ga1IydHBUMmxKTWs5SFNtaFBWRkV6VFhrd2QwMXFTbTFNVkZKcFRtcEZkRTlYV1RKWlV6QTFUa1JaTlU5WFdUVlBWMXB0V1RKRmFVeERTbnBrVjBscFQybEpORTVFUVRWUFZHTjVUa1JCTWs5RFNYTkpiV3g2WTNsSk5rbHVUbXhpUjFwbVpHMVdlV0ZYV25CWk1rWXdZVmM1ZFVscGQybGhWMFl3U1dwdmFVMXFRWGxOUXpCM1Rua3dlVTlXVVhkUFJHOTRUVlJ2ZUU1RE5EUk5WR3QzVFdwTk5FNXFVbUZKYVhkcFl6STVNV050VG14SmFtOXBaRmhPYkdOc09YcGpSMVpxWVZkYWNGcFhVV2xNUTBveVdsaEtjRnB0Ykd4YVEwazJaRWhLTVZwVGQybGpSMmgyWW0xV1ptSnVWblJaYlZaNVNXcHZhVXQ2VVRCTlZFbDZUa1JWTWs1Nlp6Vk5RMG81SWl3aWNISnZkR1ZqZEdWa0lqb2laWGxLYUdKSFkybFBhVXBHV2tWU1ZGRlRTamtpTENKemFXZHVZWFIxY21VaU9pSnVjMkkzZEZjMVNVUjFiRFpRVDA5MmJFeE5YMU5hUW5aMGVVaDFhVjlhZFRZMmIySkxha1ZzUWs1SldrNDJjREl4ZUhoNlMyTXlNVW94VUZkc1VVZzBNemhtUmpSQ2FVaENWVWxuWDFwc1JIZGtRMjlEWnlKOVhYMWRMQ0pxZEdraU9pSmhOREUwTVRWaE55MDVaR1U0TFRSak5EWXRPREkyTXkwME1UVmtNMlppWmpFeVptVWlMQ0pqYVdRaU9pSTFOamcwT0RkaVpDMDVNamN4TFRRelpHTXRPVFZoTUMwd05HUTBNR1F4WkdJek56RWlMQ0p6ZEdGMGRYTWlPaUpoWTJObGNIUmxaQ0lzSW5SNWNDSTZJbWxrWlc1MGFYUnBaWE11Wm1GamRITXVjWFZsY25rdWNtVnpjQ0lzSW1GMVpDSTZJakJtTmpGaFpqUTVORFpqTVRFeE5qTmhPRE0zWkRoaVpEaGtNbUU1WkRBMUlpd2liM0IwYVc5dWN5STZleUpzYjJOaGRHbHZibDlwWkNJNklpSXNJblpwYzJsMFgybGtJam9pTTJJNU1EYzJOamt0WVRneU55MDBOVEl3TFdGbFlqa3RPR1kzWXprMFpHTTVaamM1SW4wc0ltbHpjeUk2SWpnME1EazVOekkwTURZNElpd2ljM1ZpSWpvaU9EUXdPVGszTWpRd05qZ2lMQ0pwWVhRaU9pSXlNREl3TFRBNExUQTBWREUzT2pRME9qTXlXaUlzSW1WNGNDSTZJakl3TWpBdE1EZ3RNRGRVTVRjNk5EUTZNekphSW4wIiwicHJvdGVjdGVkIjoiZXlKaGJHY2lPaUpGWkVSVFFTSjkiLCJzaWduYXR1cmUiOiIzMkhRaUtLbjk0clFValFCNUVCN3ZBbWxyR3U5bjREaVdOaVNhSDRpV2kycndUZlllYjFXRDZWWEk1cWpCbUdQSjl6NGRqdUVlOXJmVDBvUXpNeDZBQSJ9'
-      await ms['processIncommingMessage'](c, 0)
+      await ms['processIncommingMessage'](c, 0, '1:1')
 
       await Promise.all([subscription])
       expect(count).toBeFalsy()
@@ -132,7 +135,7 @@ describe('jwt', () => {
       })
 
       let c = 'lol'
-      await ms['processIncommingMessage'](c, 0)
+      await ms['processIncommingMessage'](c, 0, '1:1')
 
       await Promise.all([subscription])
       expect(count).toBeFalsy()
@@ -153,7 +156,7 @@ describe('jwt', () => {
 
       let c =
         'eyJwYXlsb2FkIjoiZXlKbVlXTjBjeUk2VzNzaVptRmpkQ0k2SW5Cb2IyNWxYMjUxYldKbGNpSXNJbUYwZEdWemRHRjBhVzl1Y3lJNlczc2ljR0Y1Ykc5aFpDSTZJbVY1U25Ga1IydHBUMmxKTWs5SFNtaFBWRkV6VFhrd2QwMXFTbTFNVkZKcFRtcEZkRTlYV1RKWlV6QTFUa1JaTlU5WFdUVlBWMXB0V1RKRmFVeERTbnBrVjBscFQybEpORTVFUVRWUFZHTjVUa1JCTWs5RFNYTkpiV3g2WTNsSk5rbHVUbXhpUjFwbVpHMVdlV0ZYV25CWk1rWXdZVmM1ZFVscGQybGhWMFl3U1dwdmFVMXFRWGxOUXpCM1Rua3dlVTlXVVhkUFJHOTRUVlJ2ZUU1RE5EUk5WR3QzVFdwTk5FNXFVbUZKYVhkcFl6STVNV050VG14SmFtOXBaRmhPYkdOc09YcGpSMVpxWVZkYWNGcFhVV2xNUTBveVdsaEtjRnB0Ykd4YVEwazJaRWhLTVZwVGQybGpSMmgyWW0xV1ptSnVWblJaYlZaNVNXcHZhVXQ2VVRCTlZFbDZUa1JWTWs1Nlp6Vk5RMG81SWl3aWNISnZkR1ZqZEdWa0lqb2laWGxLYUdKSFkybFBhVXBHV2tWU1ZGRlRTamtpTENKemFXZHVZWFIxY21VaU9pSnVjMkkzZEZjMVNVUjFiRFpRVDA5MmJFeE5YMU5hUW5aMGVVaDFhVjlhZFRZMmIySkxha1ZzUWs1SldrNDJjREl4ZUhoNlMyTXlNVW94VUZkc1VVZzBNemhtUmpSQ2FVaENWVWxuWDFwc1JIZGtRMjlEWnlKOVhYMWRMQ0pxZEdraU9pSmhOREUwTVRWaE55MDVaR1U0TFRSak5EWXRPREkyTXkwME1UVmtNMlppWmpFeVptVWlMQ0pqYVdRaU9pSTFOamcwT0RkaVpDMDVNamN4TFRRelpHTXRPVFZoTUMwd05HUTBNR1F4WkdJek56RWlMQ0p6ZEdGMGRYTWlPaUpoWTJObGNIUmxaQ0lzSW5SNWNDSTZJbWxrWlc1MGFYUnBaWE11Wm1GamRITXVjWFZsY25rdWNtVnpjQ0lzSW1GMVpDSTZJakJtTmpGaFpqUTVORFpqTVRFeE5qTmhPRE0zWkRoaVpEaGtNbUU1WkRBMUlpd2liM0IwYVc5dWN5STZleUpzYjJOaGRHbHZibDlwWkNJNklpSXNJblpwYzJsMFgybGtJam9pTTJJNU1EYzJOamt0WVRneU55MDBOVEl3TFdGbFlqa3RPR1kzWXprMFpHTTVaamM1SW4wc0ltbHpjeUk2SWpnME1EazVOekkwTURZNElpd2ljM1ZpSWpvaU9EUXdPVGszTWpRd05qZ2lMQ0pwWVhRaU9pSXlNREl3TFRBNExUQTBWREUzT2pRME9qTXlXaUlzSW1WNGNDSTZJakl3TWpBdE1EZ3RNRGRVTVRjNk5EUTZNekphSW4wIiwicHJvdGVjdGVkIjoiZXlKaGJHY2lPaUpGWkVSVFFTSjkiLCJzaWduYXR1cmUiOiIzMkhRaUtLbjk0clFValFCNUVCN3ZBbWxyR3U5bjREaVdOaVNhSDRpV2kycndUZlllYjFXRDZWWEk1cWpCbUdQSjl6NGRqdUVlOXJmVDBvUXpNeDZBQSJ9'
-      await ms['processIncommingMessage'](c, 0)
+      await ms['processIncommingMessage'](c, 0, '1:1')
 
       let r = ms.requests.get(cid)
       expect(r.responded).toBeTruthy()

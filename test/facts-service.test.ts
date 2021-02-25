@@ -9,11 +9,12 @@ import MessagingService from '../src/messaging-service'
 import { WebSocket, Server } from 'mock-socket'
 import { Message } from 'self-protos/message_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
+import Crypto from '../src/crypto'
 
 /**
  * Attestation test
  */
-describe('AuthenticationService', () => {
+describe('FactsService', () => {
   let fs: FactsService
   let jwt: Jwt
   let ms: Messaging
@@ -21,23 +22,24 @@ describe('AuthenticationService', () => {
   let messagingService: MessagingService
   let mockServer: Server
   let URL = require('url').URL
+  let ec: Crypto
 
   beforeEach(async () => {
     let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
     let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
-
     is = new IdentityService(jwt, 'https://api.joinself.com/')
+    ec = new Crypto(is, jwt.deviceID, '/tmp/', sk)
 
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
 
-    ms = new Messaging('', jwt, is)
+    ms = new Messaging('', jwt, is, ec)
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
     messagingService = new MessagingService(jwt, ms, is)
 
-    fs = new FactsService(jwt, messagingService, is, 'test')
+    fs = new FactsService(jwt, messagingService, is, ec, 'test')
   })
 
   afterEach(async () => {
@@ -217,7 +219,7 @@ describe('AuthenticationService', () => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.valueOf() as Uint8Array)
+          let msg = Message.deserializeBinary(data[0].valueOf() as Uint8Array)
 
           // Envelope
           expect(msg.getId().length).toEqual(36)
@@ -260,7 +262,7 @@ describe('AuthenticationService', () => {
           // The cid is automatically generated
           expect(cid).toEqual('cid')
           // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.valueOf() as Uint8Array)
+          let msg = Message.deserializeBinary(data[0].valueOf() as Uint8Array)
           expect(msg.getRecipient()).toEqual('intermediary:deviceID')
           let input = msg.getCiphertext_asB64()
           let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
