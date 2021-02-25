@@ -1,5 +1,3 @@
-import fs from 'fs'
-
 import IdentityService from './identity-service'
 import crypto from 'self-crypto'
 
@@ -24,6 +22,8 @@ export default class Crypto {
     this.storage_key = storage_key
     this.account_pickle_file = `${storage_folder}/account.pickle`
 
+    const fs = require('fs')
+
     if (fs.existsSync(this.account_pickle_file)) {
       // 1a) if alice's account file exists load the pickle from the file
       this.account = crypto.unpickle_account(this.account_pickle_file, this.storage_key)
@@ -46,9 +46,7 @@ export default class Crypto {
         `${this.client.url}/v1/identities/${this.client.jwt.appID}/devices/1/pre_keys`,
         keys
       )
-
       // TODO: (@adriacidre) : do not save this file if the response is != 200
-
       // 1b-v) store the account to a file
       let pickle = crypto.pickle_account(this.account, this.storage_key)
       fs.writeFileSync(this.account_pickle_file, pickle, { mode: 0o600 })
@@ -58,6 +56,8 @@ export default class Crypto {
   public encrypt(message: string, recipient: string, recipient_device: string): string {
     let session_file_name = `${this.storage_folder}/${recipient}:${recipient_device}-session.pickle`
     let session_with_bob
+
+    const fs = require('fs')
 
     if (fs.existsSync(session_file_name)) {
       // 2a) if bob's session file exists load the pickle from the file
@@ -103,6 +103,8 @@ export default class Crypto {
   public decrypt(message: string, sender: string, sender_device: string): string {
     let session_file_name = `${this.storage_folder}/${sender}:${sender_device}-session.pickle`
     let session_with_bob
+
+    const fs = require('fs')
 
     if (fs.existsSync(session_file_name)) {
       // 7a) if bobs's session file exists load the pickle from the file

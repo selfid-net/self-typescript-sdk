@@ -9,6 +9,7 @@ import MessagingService from '../src/messaging-service'
 import { WebSocket, Server } from 'mock-socket'
 import { Message } from 'self-protos/message_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
+import Crypto from '../src/crypto'
 
 /**
  * Attestation test
@@ -21,22 +22,24 @@ describe('AuthenticationService', () => {
   let messagingService: MessagingService
   let mockServer: Server
   let URL = require('url').URL
+  let ec: Crypto
 
   beforeEach(async () => {
     let pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
     let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
     is = new IdentityService(jwt, 'https://api.joinself.com/')
+    ec = new Crypto(is, jwt.deviceID, '/tmp/', sk)
 
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
 
-    ms = new Messaging('', jwt, is)
+    ms = new Messaging('', jwt, is, ec)
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
     messagingService = new MessagingService(jwt, ms, is)
 
-    auth = new AuthenticationService(jwt, messagingService, is, 'test')
+    auth = new AuthenticationService(jwt, messagingService, is, ec, 'test')
   })
 
   afterEach(async () => {
