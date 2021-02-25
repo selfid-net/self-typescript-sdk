@@ -136,15 +136,14 @@ export default class FactsService {
     let ciphertext = this.jwt.prepare(j)
 
     // Envelope
-    const msg = new Message()
-    msg.setType(MsgType.MSG)
-    msg.setId(id)
-    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
-    msg.setRecipient(`${intermediary}:${devices[0]}`)
-    msg.setCiphertext(ciphertext)
+    var msgs = []
+    devices.forEach(d => {
+      var msg = this.buildEnvelope(id, intermediary, d, ciphertext)
+      msgs.push(msg.serializeBinary())
+    })
 
     console.log('requesting ' + j.cid)
-    let res = await this.ms.request(j.cid, msg.serializeBinary())
+    let res = await this.ms.request(j.cid, msgs)
 
     return res
   }
