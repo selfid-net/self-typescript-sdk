@@ -83,6 +83,7 @@ describe('jwt', () => {
     })
   })
 
+  /*
   describe('IdentityService::publicKeys', () => {
     it('happy path', async () => {
       const axios = require('axios')
@@ -142,7 +143,7 @@ describe('jwt', () => {
       }
     })
   })
-
+*/
   describe('IdentityService::get', () => {
     it('happy path', async () => {
       const axios = require('axios')

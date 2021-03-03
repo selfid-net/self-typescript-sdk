@@ -86,7 +86,7 @@ export default class SelfSDK {
     sdk.jwt = await Jwt.build(appID, appKey, opts)
 
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
-    sdk.encryptionClient = new Crypto(
+    sdk.encryptionClient = await Crypto.build(
       sdk.identityService,
       sdk.jwt.deviceID,
       storageFolder,

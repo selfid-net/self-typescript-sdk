@@ -110,6 +110,8 @@ export default class Jwt {
 
   public verify(input: JwtInput, pk: any): boolean {
     try {
+      console.log(input.protected)
+      console.log(input.payload)
       let msg = `${input.protected}.${input.payload}`
       let sig = this.sodium.from_base64(
         input.signature,
@@ -119,6 +121,7 @@ export default class Jwt {
 
       return this.sodium.crypto_sign_verify_detached(sig, msg, key)
     } catch (error) {
+      console.log(error)
       return false
     }
   }
@@ -149,7 +152,11 @@ export default class Jwt {
     return this.encode(`{"alg":"EdDSA","typ":"JWT","kid":"` + this.appKeyID + `"}`)
   }
 
-  encode(input: string) {
+  encode(input: string): string {
     return this.sodium.to_base64(input, this.sodium.base64_variants.URLSAFE_NO_PADDING)
+  }
+
+  decode(input: string): string {
+    return this.sodium.from_base64(input, this.sodium.base64_variants.URLSAFE_NO_PADDING)
   }
 }

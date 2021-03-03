@@ -1,6 +1,7 @@
 // Copyright 2020 Self Group Ltd. All Rights Reserved.
 
 import Jwt from './jwt'
+import SignatureGraph from './siggraph'
 
 /**
  * A PublicKey representation
@@ -68,6 +69,7 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/identities/${selfid}/devices`, options)
     } catch (error) {
+      console.log(error)
       throw this.errInternal
     }
 
@@ -83,33 +85,22 @@ export default class IdentityService {
   }
 
   /**
-   * Gets a list with the public keys for a specific user.
-   * @param selfid the user's selfid you want the public keys.
+   * Returns a public key by id
+   * @param selfid identity id
+   * @param kid key id
    */
-  async publicKeys(selfid: string): Promise<PublicKey[]> {
-    let keys: any
-    let response: any
+  async publicKey(selfid: string, kid: string): Promise<string> {
+    let identity = await this.get(selfid)
+    let sg = await SignatureGraph.build(identity['history'])
 
-    try {
-      const axios = require('axios').default
-      const options = {
-        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
-      }
+    return sg.keyByID(kid)
+  }
 
-      response = await axios.get(`${this.url}/v1/identities/${selfid}/public_keys`, options)
-    } catch (error) {
-      throw this.errInternal
-    }
+  async devicePublicKey(selfid: string, did: string): Promise<string> {
+    let identity = await this.get(selfid)
+    let sg = await SignatureGraph.build(identity['history'])
 
-    if (response.status === 200) {
-      return response.data
-    } else if (response.status === 401) {
-      throw this.errUnauthorized
-    } else if (response.status === 404) {
-      throw this.errUnexistingIdentity
-    }
-
-    return keys
+    return sg.keyByDevice(did)
   }
 
   /**
@@ -141,6 +132,7 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/${typ}/${selfid}`, options)
     } catch (error) {
+      console.log(error)
       throw this.errInternal
     }
 
@@ -155,5 +147,38 @@ export default class IdentityService {
     }
 
     return identity
+  }
+
+  async postRaw(url: string, body: any): Promise<number> {
+    try {
+      const axios = require('axios').default
+
+      let res = await axios({
+        method: 'post',
+        url: url,
+        data: body,
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      })
+      return res.status
+    } catch (error) {
+      console.log('postRaw ' + url + ' error: ' + error)
+      throw this.errInternal
+    }
+  }
+
+  async getRaw(url: string): Promise<any> {
+    try {
+      const axios = require('axios').default
+
+      let res = await axios({
+        method: 'get',
+        url: url,
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      })
+      return res
+    } catch (error) {
+      console.log('getRaw ' + url + ' error: ' + error)
+      throw this.errInternal
+    }
   }
 }

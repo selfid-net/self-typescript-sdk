@@ -90,8 +90,10 @@ export default class Messaging {
       let issuer = sender.split(':')
       this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
 
-      let pks = await this.is.publicKeys(payload.iss)
-      if (!this.jwt.verify(ciphertext, pks[0].key)) {
+      const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
+      let header = JSON.parse(decode(ciphertext['protected']))
+      let k = await this.is.publicKey(payload.iss, header['kid'])
+      if (!this.jwt.verify(ciphertext, k)) {
         console.log('unverified message ' + payload.cid)
         return
       }
@@ -265,7 +267,7 @@ export default class Messaging {
       console.log('do not need to wait for response')
       return request.acknowledged
     }
-    console.log('waiting for response')
+    console.log(`waiting for response ${id}`)
     await this.wait_for_response(id)
     console.log('responded')
 

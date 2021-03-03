@@ -89,8 +89,8 @@ export default class FactsService {
     let ciphertext = this.jwt.prepare(j)
 
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+    devices.forEach(async d => {
+      var msg = await this.buildEnvelope(id, selfid, d, ciphertext)
       msgs.push(msg.serializeBinary())
     })
 
@@ -105,13 +105,19 @@ export default class FactsService {
     return res
   }
 
-  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+  async buildEnvelope(
+    id: string,
+    selfid: string,
+    device: string,
+    ciphertext: string
+  ): Promise<Message> {
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
+    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    msg.setCiphertext(ct)
 
     return msg
   }
@@ -140,8 +146,8 @@ export default class FactsService {
 
     // Envelope
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, intermediary, d, ciphertext)
+    devices.forEach(async d => {
+      var msg = await this.buildEnvelope(id, intermediary, d, ciphertext)
       msgs.push(msg.serializeBinary())
     })
 

@@ -131,7 +131,7 @@
     "@types/uuid": "^8.3.0",
     "axios": "^0.19.2",
     "google-protobuf": "^4.0.0-rc.1",
-    "libsodium-wrappers": "^0.7.6",
+    "libsodium-wrappers": "^0.7.9",
     "lodash": ">=4.17.19",
     "mock-socket": "^9.0.3",
     "ntpclient": "^1.0.2",

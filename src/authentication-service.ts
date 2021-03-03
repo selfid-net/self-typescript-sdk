@@ -83,10 +83,14 @@ export default class AuthenticationService {
     let ciphertext = this.jwt.prepare(j)
 
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+    console.log('send to ' + selfid + "'s (" + devices.length + ') devices')
+    for (var i = 0; i < devices.length; i++) {
+      console.log(' - ' + selfid)
+      console.log(' - ' + devices[i])
+      console.log(' - ' + ciphertext)
+      var msg = await this.buildEnvelope(id, selfid, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
     if (as) {
       console.log('sending ' + id)
@@ -95,18 +99,27 @@ export default class AuthenticationService {
     }
 
     console.log('requesting ' + id)
+
     let res = await this.ms.request(j.cid, msgs)
 
     return res.status === 'accepted'
   }
 
-  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+  async buildEnvelope(
+    id: string,
+    selfid: string,
+    device: string,
+    ciphertext: string
+  ): Promise<Message> {
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
+
+    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    let utf8Encode = new TextEncoder()
+    msg.setCiphertext(utf8Encode.encode(ct))
 
     return msg
   }
