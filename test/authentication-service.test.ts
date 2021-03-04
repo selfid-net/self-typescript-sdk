@@ -10,6 +10,7 @@ import { WebSocket, Server } from 'mock-socket'
 import { Message } from 'self-protos/message_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
 import Crypto from '../src/crypto'
+import EncryptionMock from './mocks/encryption-mock'
 
 /**
  * Attestation test
@@ -29,7 +30,7 @@ describe('AuthenticationService', () => {
     let sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     jwt = await Jwt.build('appID', sk, { ntp: false })
     is = new IdentityService(jwt, 'https://api.joinself.com/')
-    ec = new Crypto(is, jwt.deviceID, '/tmp/', sk)
+    ec = new EncryptionMock()
 
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
@@ -48,12 +49,14 @@ describe('AuthenticationService', () => {
   })
 
   describe('AuthenticationService::request', () => {
+    let history = require('./__fixtures__/valid_custom_device_entry.json')
     it('happy path', async () => {
       const axios = require('axios')
+
       jest.mock('axios')
-      axios.get.mockResolvedValue({
+      axios.get.mockResolvedValueOnce({
         status: 200,
-        data: ['deviceID']
+        data: ['cjK0uSMXQjKeaKGaibkVGZ']
       })
       jest.spyOn(is, 'app').mockImplementation(
         (appID: string): Promise<any> => {
@@ -79,7 +82,7 @@ describe('AuthenticationService', () => {
 
           // Envelope
           expect(msg.getId().length).toEqual(36)
-          expect(msg.getRecipient()).toEqual('selfid:deviceID')
+          expect(msg.getRecipient()).toEqual('26742678155:cjK0uSMXQjKeaKGaibkVGZ')
           expect(msg.getSender()).toEqual('appID:1')
           expect(msg.getType()).toEqual(MsgType.MSG)
 
@@ -89,8 +92,8 @@ describe('AuthenticationService', () => {
           let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
           expect(payload.typ).toEqual('identities.authenticate.req')
           expect(payload.iss).toEqual('appID')
-          expect(payload.sub).toEqual('selfid')
-          expect(payload.aud).toEqual('selfid')
+          expect(payload.sub).toEqual('26742678155')
+          expect(payload.aud).toEqual('26742678155')
           expect(payload.cid).toEqual(cid)
           expect(payload.jti.length).toEqual(36)
 
@@ -100,7 +103,7 @@ describe('AuthenticationService', () => {
         }
       )
 
-      let res = await auth.request('selfid')
+      let res = await auth.request('26742678155')
       expect(res).toBeTruthy()
     })
 

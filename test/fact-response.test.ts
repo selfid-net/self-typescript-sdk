@@ -2,7 +2,6 @@
 
 import Jwt from '../src/jwt'
 import IdentityService from '../src/identity-service'
-import pks from './__fixtures__/pks'
 import fact from './__fixtures__/fact'
 import FactResponse from '../src/fact-response'
 
@@ -14,6 +13,7 @@ describe('jwt', () => {
   let pk: any
   let sk: any
   let is: IdentityService
+  let history = require('./__fixtures__/valid_single_entry.json')
 
   beforeEach(async () => {
     pk = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
@@ -32,7 +32,7 @@ describe('jwt', () => {
     jest.mock('axios')
     axios.get.mockResolvedValue({
       status: 200,
-      data: pks
+      data: { history: history }
     })
 
     let iat = new Date().valueOf() - 100000
@@ -71,8 +71,8 @@ describe('jwt', () => {
     expect(f.attestations.length).toEqual(1)
 
     let att = f.attestations[0]
-    expect(att.verified).toBeTruthy()
-    expect(att.to).toEqual('84099724068')
+    expect(att.verified).toBeFalsy()
+    expect(att.to).toEqual('26742678155')
     expect(att.origin).toEqual('self_verification')
     expect(att.source).toEqual('user_specified')
     expect(att.factName).toEqual('phone_number')

@@ -41,15 +41,6 @@ export default class Attestation {
     const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
     let header = JSON.parse(decode(input['protected']))
     let k = await is.publicKey(payload.iss, header['kid'])
-    console.log('......')
-    console.log('......')
-    console.log('......')
-    console.log('......')
-    console.log(k)
-    console.log(input)
-    console.log('......')
-    console.log('......')
-    console.log('......')
     a.verified = jwt.verify(input, k)
 
     return a

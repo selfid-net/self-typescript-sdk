@@ -89,10 +89,10 @@ export default class FactsService {
     let ciphertext = this.jwt.prepare(j)
 
     var msgs = []
-    devices.forEach(async d => {
-      var msg = await this.buildEnvelope(id, selfid, d, ciphertext)
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, selfid, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
     if (as) {
       console.log('sending ' + id)
@@ -146,10 +146,10 @@ export default class FactsService {
 
     // Envelope
     var msgs = []
-    devices.forEach(async d => {
-      var msg = await this.buildEnvelope(id, intermediary, d, ciphertext)
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, intermediary, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
     console.log('requesting ' + j.cid)
     let res = await this.ms.request(j.cid, msgs)
@@ -223,11 +223,11 @@ export default class FactsService {
     let cid = options.cid ? options.cid : uuidv4()
     let expTimeout = options.exp ? options.exp : 300000
 
-    facts.forEach(f => {
-      if (!Fact.isValid(f)) {
+    for (var i = 0; i < facts.length; i++) {
+      if (!Fact.isValid(facts[i])) {
         throw new TypeError('invalid facts')
       }
-    })
+    }
 
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))

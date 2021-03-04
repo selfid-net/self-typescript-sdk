@@ -83,82 +83,20 @@ describe('jwt', () => {
     })
   })
 
-  /*
-  describe('IdentityService::publicKeys', () => {
-    it('happy path', async () => {
-      const axios = require('axios')
-
-      jest.mock('axios')
-      axios.get.mockResolvedValue({
-        status: 200,
-        data: pks
-      })
-
-      let publicKeys = await is.publicKeys('selfid')
-      expect(publicKeys.length).toEqual(1)
-      expect(publicKeys[0].id).toEqual(0)
-      expect(publicKeys[0].key).toEqual(pks[0].key)
-    })
-
-    it('unauthorized response', async () => {
-      const axios = require('axios')
-
-      jest.mock('axios')
-      axios.get.mockResolvedValue({
-        status: 401,
-        data: pks
-      })
-
-      try {
-        await is.publicKeys('selfid')
-      } catch (e) {
-        expect(e.message).toBe("you're not authorized to interact with this identity")
-      }
-    })
-
-    it('not found identity', async () => {
-      const axios = require('axios')
-
-      jest.mock('axios')
-      axios.get.mockResolvedValue({
-        status: 404,
-        data: pks
-      })
-
-      try {
-        await is.publicKeys('selfid')
-      } catch (e) {
-        expect(e.message).toBe('identity does not exist')
-      }
-    })
-
-    it('internal error', async () => {
-      const axios = require('axios')
-      jest.spyOn(axios, 'get').mockRejectedValue(new Error('error'))
-
-      try {
-        await is.publicKeys('selfid')
-      } catch (e) {
-        expect(e.message).toBe('internal error')
-      }
-    })
-  })
-*/
   describe('IdentityService::get', () => {
+    let history = require('./__fixtures__/valid_custom_device_entry.json')
     it('happy path', async () => {
       const axios = require('axios')
 
       jest.mock('axios')
       axios.get.mockResolvedValue({
         status: 200,
-        data: { id: '1112223334', public_keys: pks }
+        data: { id: '1112223334', history: history }
       })
 
       let identity = await is.get('selfid')
       expect(identity.id).toEqual('1112223334')
-      expect(identity.publicKeys.length).toEqual(1)
-      expect(identity.publicKeys[0].id).toEqual(0)
-      expect(identity.publicKeys[0].key).toEqual(pks[0].key)
+      expect(identity.history.length).toEqual(1)
     })
 
     it('unauthorized response', async () => {
@@ -166,8 +104,8 @@ describe('jwt', () => {
 
       jest.mock('axios')
       axios.get.mockResolvedValue({
-        status: 401,
-        data: { id: '1112223334', public_keys: pks }
+        status: 200,
+        data: { id: '1112223334', history: history }
       })
 
       try {
@@ -182,8 +120,8 @@ describe('jwt', () => {
 
       jest.mock('axios')
       axios.get.mockResolvedValue({
-        status: 404,
-        data: { id: '1112223334', public_keys: pks }
+        status: 200,
+        data: { id: '1112223334', history: history }
       })
 
       try {

@@ -12,6 +12,7 @@ import FactResponse from './fact-response'
 import * as fs from 'fs'
 import { openStdin } from 'process'
 import { v4 as uuidv4 } from 'uuid'
+import { Identity, App } from './identity-service'
 
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
@@ -93,6 +94,7 @@ export default class Messaging {
       const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
       let header = JSON.parse(decode(ciphertext['protected']))
       let k = await this.is.publicKey(payload.iss, header['kid'])
+
       if (!this.jwt.verify(ciphertext, k)) {
         console.log('unverified message ' + payload.cid)
         return
@@ -250,9 +252,9 @@ export default class Messaging {
     if (!Array.isArray(request.data)) {
       this.ws.send(request.data)
     } else {
-      request.data.forEach(data => {
-        this.ws.send(data)
-      })
+      for (var i = 0; i < request.data.length; i++) {
+        this.ws.send(request.data[i])
+      }
     }
 
     this.requests.set(id, request)

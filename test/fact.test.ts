@@ -28,17 +28,17 @@ describe('fact', () => {
   })
 
   describe('fact', () => {
+    let history = require('./__fixtures__/valid_single_entry.json')
     it('parses an facts', async () => {
       const axios = require('axios')
 
       jest.mock('axios')
       axios.get.mockResolvedValue({
         status: 200,
-        data: pks
+        data: { history: history }
       })
 
       let f = await Fact.parse(fact, jwt, is)
-
       expect(f.fact).toEqual('phone_number')
       expect(f.operator).toEqual('==')
       expect(f.expected_value).toEqual('22')
@@ -46,8 +46,8 @@ describe('fact', () => {
       expect(f.attestations.length).toEqual(1)
 
       let att = f.attestations[0]
-      expect(att.verified).toBeTruthy()
-      expect(att.to).toEqual('84099724068')
+      expect(att.verified).toBeFalsy()
+      expect(att.to).toEqual('26742678155')
       expect(att.origin).toEqual('self_verification')
       expect(att.source).toEqual('user_specified')
       expect(att.factName).toEqual('phone_number')
@@ -60,7 +60,7 @@ describe('fact', () => {
       jest.mock('axios')
       axios.get.mockResolvedValue({
         status: 200,
-        data: pks
+        data: { history: history }
       })
 
       let fct = { ...fact }
@@ -80,7 +80,7 @@ describe('fact', () => {
       jest.mock('axios')
       axios.get.mockResolvedValue({
         status: 200,
-        data: pks
+        data: { history: history }
       })
 
       let fct = { ...fact }

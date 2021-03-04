@@ -86,7 +86,6 @@ export default class Crypto {
         `${this.client.url}/v1/identities/${recipient}/devices/${recipientDevice}/pre_keys`
       )
       if (getRes.status != 200) {
-        console.log(getRes.body)
         throw new Error('could not get identity pre_keys')
       }
       let one_time_key = getRes.data['key']
@@ -121,7 +120,10 @@ export default class Crypto {
     let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
     fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
 
-    return ciphertext
+    var util = require('util')
+    let utf8Encode = new util.TextEncoder()
+
+    return utf8Encode.encode(ciphertext)
   }
 
   public decrypt(message: string, sender: string, sender_device: string): Promise<string> {

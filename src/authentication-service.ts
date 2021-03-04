@@ -83,11 +83,7 @@ export default class AuthenticationService {
     let ciphertext = this.jwt.prepare(j)
 
     var msgs = []
-    console.log('send to ' + selfid + "'s (" + devices.length + ') devices')
     for (var i = 0; i < devices.length; i++) {
-      console.log(' - ' + selfid)
-      console.log(' - ' + devices[i])
-      console.log(' - ' + ciphertext)
       var msg = await this.buildEnvelope(id, selfid, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
     }
@@ -118,8 +114,7 @@ export default class AuthenticationService {
     msg.setRecipient(`${selfid}:${device}`)
 
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    let utf8Encode = new TextEncoder()
-    msg.setCiphertext(utf8Encode.encode(ct))
+    msg.setCiphertext(ct)
 
     return msg
   }

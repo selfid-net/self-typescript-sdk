@@ -44,13 +44,10 @@ describe('jwt', () => {
         ]
       }
     })
-    let kk = <JwtInput>(
-      'ezpwYXlsb2FkPT4iZXlKcWRHa2lPaUkwWXpNd09EUXhZaTFoTkRSakxUUTJNamd0T0daak1TMWpObVkxTmpWbE1XUTRZVGtpTENKemRXSWlPaUkyTmpZeE56WTROVEU1TmlJc0ltbHpjeUk2SW5ObGJHWmZkbVZ5YVdacFkyRjBhVzl1SWl3aWFXRjBJam9pTWpBeU1TMHdNaTB5TTFReE1Eb3lOVG93TVM0MU56UTVNekExTnpkYUlpd2ljMjkxY21ObElqb2lkWE5sY2w5emNHVmphV1pwWldRaUxDSjJaWEpwWm1sbFpDSTZkSEoxWlN3aVpXMWhhV3hmWVdSa2NtVnpjeUk2SW1Ga2NtbGhMbU5wWkhKbFFHZHRZV2xzTG1OdmJTSjkiLCA6cHJvdGVjdGVkPT4iZXlKaGJHY2lPaUpGWkVSVFFTSXNJbXRwWkNJNklqRWlmUSIsIDpzaWduYXR1cmU9PiJJQWE4SzZtMkszOUJLM25iQjNFQ0J3eG55Q2VPU2JQcmtuQXVhRi1IaGtkUkdjRUdpeUNLU3dzaWR0M2NDSE02UERvdU5mRUhYaVFuV2xybnF1cnhBUSJ9'
-    )
 
-    let att = await Attestation.parse('phone_number', kk, jwt, is)
+    let att = await Attestation.parse('phone_number', at, jwt, is)
     expect(att.verified).toBeTruthy()
-    expect(att.to).toEqual('84099724068')
+    expect(att.to).toEqual('26742678155')
     expect(att.origin).toEqual('self_verification')
     expect(att.source).toEqual('user_specified')
     expect(att.factName).toEqual('phone_number')

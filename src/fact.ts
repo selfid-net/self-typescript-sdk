@@ -110,7 +110,8 @@ export default class Fact {
         valid = false
       }
     } else {
-      input.sources.forEach(s => {
+      for (var i = 0; i < input.sources.length; i++) {
+        let s = input.sources[i]
         if (!validSources.includes(s)) {
           throw new TypeError(errInvalidSource)
         }
@@ -135,7 +136,7 @@ export default class Fact {
             return
           }
         }
-      })
+      }
     }
 
     return valid

@@ -11,6 +11,7 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import MessagingService from '../src/messaging-service'
 import { AccessControlList } from 'self-protos/acl_pb'
 import { ACLCommand } from 'self-protos/aclcommand_pb'
+import EncryptionMock from './mocks/encryption-mock'
 
 describe('Messaging service', () => {
   let mss: MessagingService
@@ -28,7 +29,9 @@ describe('Messaging service', () => {
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
 
-    ms = new Messaging('', jwt, is)
+    let ec = new EncryptionMock()
+    ms = new Messaging('', jwt, is, ec)
+
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
 

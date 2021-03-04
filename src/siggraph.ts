@@ -157,18 +157,18 @@ export default class SignatureGraph {
     return sg
   }
 
-  keyByID(kid: string): string {
+  keyByID(kid: string): Key {
     if (!(kid in this.keys)) {
-      throw new Error('key not found')
+      throw new Error('key not (kid:' + kid + ') found')
     }
-    return this.keys[kid].rawPublicKey
+    return this.keys[kid]
   }
 
-  keyByDevice(did: string): string {
+  keyByDevice(did: string): Key {
     if (!(did in this.devices)) {
-      throw new Error('key not found')
+      throw new Error('key not (did:' + did + ') found')
     }
-    return this.devices[did].rawPublicKey
+    return this.devices[did]
   }
 
   execute(operation) {

@@ -80,18 +80,25 @@ export default class SelfSDK {
       env?: string
       autoReconnect?: boolean
       ntp?: boolean
+      encryptionClient?: Crypto
     }
   ): Promise<SelfSDK> {
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
     sdk.jwt = await Jwt.build(appID, appKey, opts)
+    let options = opts ? opts : {}
 
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
-    sdk.encryptionClient = await Crypto.build(
-      sdk.identityService,
-      sdk.jwt.deviceID,
-      storageFolder,
-      storageKey
-    )
+    if (options['encryptionClient'] == undefined) {
+      sdk.encryptionClient = await Crypto.build(
+        sdk.identityService,
+        sdk.jwt.deviceID,
+        storageFolder,
+        storageKey
+      )
+    } else {
+      sdk.encryptionClient = options['encryptionClient']
+    }
+
     if (sdk.messagingURL === '') {
       sdk.ms = new Messaging(
         sdk.messagingURL,
@@ -112,8 +119,7 @@ export default class SelfSDK {
 
     sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)
 
-    let options = opts ? opts : {}
-    let env = options.env ? options.env : '-'
+    let env = options['env'] ? options['env'] : '-'
     sdk.factsService = new FactsService(
       sdk.jwt,
       sdk.messagingService,

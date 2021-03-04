@@ -14,17 +14,17 @@ type PublicKey = {
 /**
  * An identity object representing both apps and users.
  */
-type Identity = {
+export type Identity = {
   id: string
-  publicKeys: PublicKey[]
+  history: []
 }
 
 /**
  * An app object representing both apps.
  */
-type App = {
+export type App = {
   id: string
-  publicKeys: PublicKey[]
+  history: []
   name: string
   image: string
   paid_actions: boolean
@@ -57,6 +57,7 @@ export default class IdentityService {
    * @param selfid the user you want to query the devices.
    */
   async devices(selfid: string): Promise<string[]> {
+    console.log('getting devices')
     let devices: string[] = []
     let response: any
 
@@ -92,15 +93,17 @@ export default class IdentityService {
   async publicKey(selfid: string, kid: string): Promise<string> {
     let identity = await this.get(selfid)
     let sg = await SignatureGraph.build(identity['history'])
+    let k = sg.keyByID(kid)
 
-    return sg.keyByID(kid)
+    return k.rawPublicKey
   }
 
   async devicePublicKey(selfid: string, did: string): Promise<string> {
     let identity = await this.get(selfid)
     let sg = await SignatureGraph.build(identity['history'])
+    let k = sg.keyByDevice(did)
 
-    return sg.keyByDevice(did)
+    return k.rawPublicKey
   }
 
   /**
@@ -120,6 +123,7 @@ export default class IdentityService {
   }
 
   private async getIdentity(selfid: string, typ: string): Promise<Identity | App> {
+    console.log('getting identity details')
     let identity: any
     let response: any
 
@@ -138,8 +142,7 @@ export default class IdentityService {
 
     if (response.status === 200) {
       identity = response.data
-      identity.publicKeys = response.data.public_keys
-      delete identity.public_keys
+      identity.history = response.data.history
     } else if (response.status === 401) {
       throw this.errUnauthorized
     } else if (response.status === 404) {
