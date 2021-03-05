@@ -9,15 +9,16 @@ import Crypto from '../src/crypto'
  */
 describe('crypto', () => {
   let jwt: Jwt
-  let pk: any
-  let skB: string
+  let pkB: any
   let skA: string
+  let skB: string
+  let otkB: string
   let is: IdentityService
 
   beforeEach(async () => {
-    pk = 'HFVVpSs8W804ok2khjn_a_ccHc6yvzhg2lvwKKxjQM0'
-    skB = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
     skA = '1:1Re4zgkJDPsIKOE3DRtapBFsynbdZdufzVuM0jXnl+Y'
+    skB = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    pkB = 'UZXk4PSY6LN29R15jUVuDabsoH7VhFkVWGApA0IYLaY'
   })
 
   afterEach(async () => {
@@ -25,11 +26,11 @@ describe('crypto', () => {
   })
 
   it('encrypt / decrypt', async () => {
-    let bobJWT = await Jwt.build('bobID', skB, { ntp: false })
-    let bobIS = new IdentityService(bobJWT, 'https://api.joinself.com/')
-
     let aliceJWT = await Jwt.build('aliceID', skA, { ntp: false })
     let aliceIS = new IdentityService(aliceJWT, 'https://api.joinself.com/')
+
+    let bobJWT = await Jwt.build('bobID', skB, { ntp: false })
+    let bobIS = new IdentityService(bobJWT, 'https://api.joinself.com/')
 
     jest.spyOn(aliceIS, 'postRaw').mockImplementation(
       (url: string, body: any): Promise<number> => {
@@ -42,37 +43,35 @@ describe('crypto', () => {
     jest.spyOn(bobIS, 'postRaw').mockImplementation(
       (url: string, body: any): Promise<number> => {
         return new Promise(resolve => {
+          otkB = body[0].key
           resolve(200)
         })
       }
     )
 
-    jest.spyOn(bobIS, 'devicePublicKey').mockImplementation(
+    jest.spyOn(aliceIS, 'devicePublicKey').mockImplementation(
       (selfid: string, did: string): Promise<string> => {
         return new Promise(resolve => {
-          resolve('nNa1aFIDgomyJ1o90vALAIYERA9VGaP015CYpU0jHgc')
+          resolve(pkB)
         })
       }
     )
 
-    jest.spyOn(bobIS, 'getRaw').mockImplementation(
+    jest.spyOn(aliceIS, 'getRaw').mockImplementation(
       (url: string): Promise<any> => {
         return new Promise(resolve => {
-          resolve({ status: 200, data: { key: 'SZtuxEF539SKOP1AL6z/HTpNfNdYvQPcA7RBXsxkQHc' } })
+          resolve({ status: 200, data: { id: 'AAAAAQ', key: otkB } })
         })
       }
     )
 
-    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key_bob')
     let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice/', 'storage_key_alice')
+    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key_bob')
 
-    let encryptedString = await bobC.encrypt('hello alice', 'aliceID', '1')
-    console.log('ENCRYPTED STRING:')
-    console.log('=======================')
+    let encryptedString = await aliceC.encrypt('hello bob', 'bobID', '1')
     let coc = String.fromCharCode.apply(null, encryptedString)
-    console.log(coc)
 
-    let decryptedString = await aliceC.decrypt(coc, 'bobID', '1')
+    let decryptedString = await bobC.decrypt(coc, 'aliceID', '1')
     console.log('DECRYPTED STRING:')
     console.log('=======================')
     console.log(decryptedString)
