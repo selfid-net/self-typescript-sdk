@@ -80,7 +80,7 @@ export default class AuthenticationService {
     let devices = await this.is.devices(selfid)
 
     let j = this.buildRequest(selfid, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     var msgs = []
     for (var i = 0; i < devices.length; i++) {
@@ -114,6 +114,8 @@ export default class AuthenticationService {
     msg.setRecipient(`${selfid}:${device}`)
 
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    console.log('xoxoxox')
+    console.log(ct)
     msg.setCiphertext(ct)
 
     return msg

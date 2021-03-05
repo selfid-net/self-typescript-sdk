@@ -146,29 +146,14 @@ export default class Crypto {
 
     // 5) encrypt a message
     let ciphertext = crypto.group_encrypt(group_session, message)
-    console.log('plain text')
-    console.log(message)
-    console.log('encrypted text')
-    console.log(ciphertext)
-    /*
-    console.log("try to decrypt it!")
-
-    var ciphertextForBob = JSON.parse(ciphertext)['recipients'][`${recipient}:${recipientDevice}`]['ciphertext']
-    var sessionWithAlice = crypto.create_inbound_session(this.account, ciphertextForBob)
-    let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
-
-    var groupSessionWithAlice = crypto.create_group_session(`${recipient}:${recipientDevice}`)
-    crypto.add_group_participant(groupSessionWithAlice, myID, sessionWithAlice)
-    var plaintextForBob = crypto.group_decrypt(groupSessionWithAlice, `${recipient}:${recipientDevice}`, ciphertext)
-    console.log("--------")
-    console.log(plaintextForBob)
-    console.log("--------")
-*/
 
     // 6) store the session to a file
     let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
     fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
 
+    return ciphertext
+    let buf = Buffer.from(ciphertext)
+    return buf.toString()
     var util = require('util')
     let utf8Encode = new util.TextEncoder()
 
