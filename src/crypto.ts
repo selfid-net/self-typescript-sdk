@@ -64,16 +64,12 @@ export default class Crypto {
     recipient: string,
     recipientDevice: string
   ): Promise<string> {
-    console.log('ENCRYPTING')
-    console.log('ENCRYPTING')
-    console.log('ENCRYPTING')
-    console.log('ENCRYPTING')
     let session_file_name = this.sessionPath(recipient, recipientDevice)
     let session_with_bob
 
     const fs = require('fs')
     const crypto = require('self-crypto')
-    console.log(session_file_name)
+
     if (fs.existsSync(session_file_name)) {
       // 2a) if bob's session file exists load the pickle from the file
       let session = fs.readFileSync(session_file_name)
@@ -82,39 +78,21 @@ export default class Crypto {
       // 2b-i) if you have not previously sent or recevied a message to/from bob,
       //       you must get his identity key from GET /v1/identities/bob/
       let ed25519_identity_key = await this.client.devicePublicKey(recipient, recipientDevice)
-      console.log('--------------')
-      console.log('--------------')
-      console.log('--------------')
-      console.log('--------------')
-      console.log(ed25519_identity_key)
-      console.log('--------------')
-      console.log('--------------')
-      console.log('--------------')
-      console.log('--------------')
 
       // 2b-ii) get a one time key for bob
       let getRes = await this.client.getRaw(
         `${this.client.url}/v1/identities/${recipient}/devices/${recipientDevice}/pre_keys`
       )
+
       if (getRes.status != 200) {
         throw new Error('could not get identity pre_keys')
       }
+
       let one_time_key = getRes.data['key']
 
       // 2b-iii) convert bobs ed25519 identity key to a curve25519 key
-      console.log('xoxoxoxo')
-      console.log(ed25519_identity_key)
       let curve25519_identity_key = crypto.ed25519_pk_to_curve25519(ed25519_identity_key)
-      console.log('==================')
-      console.log('==================')
-      console.log('==================')
-      console.log('==================')
-      console.log(curve25519_identity_key)
-      console.log('==================')
-      console.log('==================')
-      console.log('==================')
-      console.log('==================')
-      console.log('xoxoxoxo')
+
       curve25519_identity_key = curve25519_identity_key.replace(/[^\x20-\x7E]/gim, '')
 
       // 2b-iv) create the session with bob
@@ -123,8 +101,6 @@ export default class Crypto {
         curve25519_identity_key,
         one_time_key
       )
-      console.log('one time key:')
-      console.log(one_time_key)
 
       // 2b-v) store the session to a file
       // TODO This does not exist on ruby sdk
@@ -133,37 +109,15 @@ export default class Crypto {
     }
 
     // 3) create a group session and set the identity of the account youre using
-    console.log('create group session:')
-    console.log(`${this.client.jwt.appID}:${this.client.jwt.deviceID}`)
     let group_session = crypto.create_group_session(
       `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
     )
 
-    console.log('add participant:')
-    console.log(`${recipient}:${recipientDevice}`)
     // 4) add all recipients and their sessions
     crypto.add_group_participant(group_session, `${recipient}:${recipientDevice}`, session_with_bob)
 
     // 5) encrypt a message
     let ciphertext = crypto.group_encrypt(group_session, message)
-    console.log('plain text')
-    console.log(message)
-    console.log('encrypted text')
-    console.log(ciphertext)
-    /*
-    console.log("try to decrypt it!")
-
-    var ciphertextForBob = JSON.parse(ciphertext)['recipients'][`${recipient}:${recipientDevice}`]['ciphertext']
-    var sessionWithAlice = crypto.create_inbound_session(this.account, ciphertextForBob)
-    let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
-
-    var groupSessionWithAlice = crypto.create_group_session(`${recipient}:${recipientDevice}`)
-    crypto.add_group_participant(groupSessionWithAlice, myID, sessionWithAlice)
-    var plaintextForBob = crypto.group_decrypt(groupSessionWithAlice, `${recipient}:${recipientDevice}`, ciphertext)
-    console.log("--------")
-    console.log(plaintextForBob)
-    console.log("--------")
-*/
 
     // 6) store the session to a file
     let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
@@ -194,24 +148,18 @@ export default class Crypto {
       let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
       let ciphertext = group_message_json['recipients'][myID]['ciphertext']
 
-      console.log(' ----- > 1')
-      console.log(ciphertext)
       // 7b-ii) use the initial message to create a session for bob or carol
       session_with_bob = crypto.create_inbound_session(this.account, ciphertext)
-      console.log(' ----- > 2')
 
       // 7b-iii) store the session to a file
       let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
       fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
-      console.log(' ----- > 3')
 
       // 7c-i) remove the sessions prekey from the account
       crypto.remove_one_time_keys(this.account, session_with_bob)
-      console.log(' ----- > 4')
 
       // 7d-i) publish new prekeys if the amount of remaining keys has fallen below a threshold
       let currentOneTimeKeys = JSON.parse(crypto.one_time_keys(this.account))
-      console.log(' ----- > 5')
 
       if (Object.keys(currentOneTimeKeys['curve25519']).length < 10) {
         // 7d-ii) generate some keys for alice and publish them
