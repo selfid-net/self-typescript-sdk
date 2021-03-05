@@ -10,12 +10,14 @@ import Crypto from '../src/crypto'
 describe('crypto', () => {
   let jwt: Jwt
   let pk: any
-  let sk: any
+  let skB: string
+  let skA: string
   let is: IdentityService
 
   beforeEach(async () => {
     pk = 'HFVVpSs8W804ok2khjn_a_ccHc6yvzhg2lvwKKxjQM0'
-    sk = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    skB = '1:GVV4WqN6qQdfD7VQYV/VU7/9CTmWceXtSN4mykhzk7Q'
+    skA = '1:1Re4zgkJDPsIKOE3DRtapBFsynbdZdufzVuM0jXnl+Y'
   })
 
   afterEach(async () => {
@@ -23,10 +25,10 @@ describe('crypto', () => {
   })
 
   it('encrypt / decrypt', async () => {
-    let bobJWT = await Jwt.build('bobID', sk, { ntp: false })
+    let bobJWT = await Jwt.build('bobID', skB, { ntp: false })
     let bobIS = new IdentityService(bobJWT, 'https://api.joinself.com/')
 
-    let aliceJWT = await Jwt.build('aliceID', sk, { ntp: false })
+    let aliceJWT = await Jwt.build('aliceID', skA, { ntp: false })
     let aliceIS = new IdentityService(aliceJWT, 'https://api.joinself.com/')
 
     jest.spyOn(aliceIS, 'postRaw').mockImplementation(
@@ -61,8 +63,8 @@ describe('crypto', () => {
       }
     )
 
-    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key')
-    let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice/', 'storage_key')
+    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key_bob')
+    let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice/', 'storage_key_alice')
 
     let encryptedString = await bobC.encrypt('hello alice', 'aliceID', '1')
     console.log('ENCRYPTED STRING:')
