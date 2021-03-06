@@ -27,7 +27,8 @@ export default class Crypto {
 
     if (fs.existsSync(cc.accountPath())) {
       // 1a) if alice's account file exists load the pickle from the file
-      cc.account = crypto.unpickle_account(cc.accountPath(), cc.storageKey)
+      let pickle = fs.readFileSync(cc.accountPath())
+      cc.account = crypto.unpickle_account(pickle.toString(), cc.storageKey)
     } else {
       // 1b-i) if create a new account for alice if one doesn't exist already
       cc.account = crypto.create_olm_account_derrived_keys(cc.client.jwt.appKey)
@@ -65,7 +66,7 @@ export default class Crypto {
     recipientDevice: string
   ): Promise<string> {
     let session_file_name = this.sessionPath(recipient, recipientDevice)
-    let session_with_bob
+    let session_with_bob: any
 
     const fs = require('fs')
     const crypto = require('self-crypto')
@@ -93,8 +94,6 @@ export default class Crypto {
       // 2b-iii) convert bobs ed25519 identity key to a curve25519 key
       let curve25519_identity_key = crypto.ed25519_pk_to_curve25519(ed25519_identity_key)
 
-      curve25519_identity_key = curve25519_identity_key.replace(/[^\x20-\x7E]/gim, '')
-
       // 2b-iv) create the session with bob
       session_with_bob = crypto.create_outbound_session(
         this.account,
@@ -103,9 +102,8 @@ export default class Crypto {
       )
 
       // 2b-v) store the session to a file
-      // TODO This does not exist on ruby sdk
-      // let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
-      // fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
+      let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
+      fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
     }
 
     // 3) create a group session and set the identity of the account youre using
@@ -124,17 +122,11 @@ export default class Crypto {
     fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
 
     return ciphertext
-    let buf = Buffer.from(ciphertext)
-    return buf.toString()
-    var util = require('util')
-    let utf8Encode = new util.TextEncoder()
-
-    return utf8Encode.encode(ciphertext)
   }
 
   public decrypt(message: string, sender: string, sender_device: string): Promise<string> {
     let session_file_name = this.sessionPath(sender, sender_device)
-    let session_with_bob
+    let session_with_bob: any
 
     const fs = require('fs')
     const crypto = require('self-crypto')
@@ -147,6 +139,7 @@ export default class Crypto {
       // 7b-i) if you have not previously sent or received a message to/from bob,
       //       you should extract the initial message from the group message intended
       //       for your account id.
+
       let group_message_json = JSON.parse(message)
       let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
       let ciphertext = group_message_json['recipients'][myID]['ciphertext']

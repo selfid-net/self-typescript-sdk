@@ -114,9 +114,8 @@ export default class AuthenticationService {
     msg.setRecipient(`${selfid}:${device}`)
 
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    console.log('xoxoxox')
-    console.log(ct)
-    msg.setCiphertext(ct)
+
+    msg.setCiphertext(Buffer.from(ct))
 
     return msg
   }

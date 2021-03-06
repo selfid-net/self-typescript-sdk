@@ -86,16 +86,17 @@ export default class Messaging {
 
   private async processIncommingMessage(input: string, offset: number, sender: string) {
     try {
-      let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
-      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      let ciphertext = Buffer.from(input, 'base64').toString()
       let issuer = sender.split(':')
-      this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
+
+      let plaintext = await this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
+      let payload = JSON.parse(plaintext)
 
       const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
       let header = JSON.parse(decode(ciphertext['protected']))
       let k = await this.is.publicKey(payload.iss, header['kid'])
 
-      if (!this.jwt.verify(ciphertext, k)) {
+      if (!this.jwt.verify(payload, k)) {
         console.log('unverified message ' + payload.cid)
         return
       }

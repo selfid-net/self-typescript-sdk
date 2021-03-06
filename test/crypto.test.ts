@@ -68,12 +68,8 @@ describe('crypto', () => {
     let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice/', 'storage_key_alice')
     let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key_bob')
 
-    let encryptedString = await aliceC.encrypt('hello bob', 'bobID', '1')
-    let coc = String.fromCharCode.apply(null, encryptedString)
-
-    let decryptedString = await bobC.decrypt(coc, 'aliceID', '1')
-    console.log('DECRYPTED STRING:')
-    console.log('=======================')
-    console.log(decryptedString)
+    let ciphertext = await aliceC.encrypt('hello bob', 'bobID', '1')
+    let plaintext = await bobC.decrypt(ciphertext, 'aliceID', '1')
+    console.log(plaintext)
   })
 })

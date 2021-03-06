@@ -137,7 +137,7 @@
     "ntpclient": "^1.0.2",
     "open": ">=6.0.0",
     "qrcode-generator-ts": "0.0.4",
-    "self-crypto": "^1.0.0",
+    "self-crypto": "^1.0.2",
     "self-protos": "^1.0.1",
     "text-encoding": "^0.7.0",
     "ts-protoc-gen": "^0.12.0",
