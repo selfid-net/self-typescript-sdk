@@ -31,6 +31,7 @@ export default class Messaging {
   callbacks: Map<string, (n: any) => any>
   is: IdentityService
   offsetPath: string
+  storageDir: string
   encryptionClient: Crypto
 
   constructor(
@@ -52,10 +53,6 @@ export default class Messaging {
       if ('storageDir' in opts) {
         this.offsetPath = opts.storageDir
       }
-    }
-    if (!fs.existsSync(this.offsetPath)) {
-      console.log('creating file')
-      fs.mkdirSync(this.offsetPath)
     }
     this.offsetPath = `${this.offsetPath}/${this.jwt.appID}:${this.jwt.deviceID}.offset`
 
@@ -93,8 +90,8 @@ export default class Messaging {
       let payload = JSON.parse(plaintext)
 
       const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
-      let header = JSON.parse(decode(ciphertext['protected']))
-      let k = await this.is.publicKey(payload.iss, header['kid'])
+      let header = JSON.parse(decode(payload['protected']))
+      let k = await this.is.publicKey(issuer[0], header['kid'])
 
       if (!this.jwt.verify(payload, k)) {
         console.log('unverified message ' + payload.cid)
@@ -102,13 +99,14 @@ export default class Messaging {
       }
 
       this.setOffset(offset)
-      switch (payload.typ) {
+      let p = JSON.parse(decode(payload['payload']))
+      switch (p.typ) {
         case 'identities.facts.query.resp': {
-          await this.processResponse(payload, 'identities.facts.query.resp')
+          await this.processResponse(p, 'identities.facts.query.resp')
           break
         }
         case 'identities.authenticate.resp': {
-          await this.processResponse(payload, 'identities.authenticate.resp')
+          await this.processResponse(p, 'identities.authenticate.resp')
           break
         }
       }

@@ -5,7 +5,12 @@ import { exit } from 'process';
 
 async function qrFactRequest(appID: string, appSecret: string, selfID: string) {
     //const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
+    let opts = {}
+    if (process.env["SELF_ENV"] != "") {
+        opts['env'] = process.env["SELF_ENV"]
+    }
+    let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
+    const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
     sdk.facts().subscribe((res: any): any => {
         console.log(res.attestationValuesFor('phone_number')[0])

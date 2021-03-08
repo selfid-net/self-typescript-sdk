@@ -10,6 +10,7 @@ import { AccessControlList } from 'self-protos/acl_pb'
 import { MsgType } from 'self-protos/msgtype_pb'
 import { ACLCommand } from 'self-protos/aclcommand_pb'
 import { Message } from 'self-protos/message_pb'
+import Crypto from './crypto'
 
 export interface Request {
   [details: string]: any
@@ -26,6 +27,7 @@ export default class MessagingService {
   is: IdentityService
   ms: Messaging
   jwt: Jwt
+  crypto: Crypto
 
   /**
    * constructs a MessagingService
@@ -33,10 +35,11 @@ export default class MessagingService {
    * @param ms a Messaging object
    * @param is an IdentityService object
    */
-  constructor(jwt: Jwt, ms: Messaging, is: IdentityService) {
+  constructor(jwt: Jwt, ms: Messaging, is: IdentityService, ec: Crypto) {
     this.jwt = jwt
     this.ms = ms
     this.is = is
+    this.crypto = ec
   }
 
   /**
@@ -161,30 +164,27 @@ export default class MessagingService {
    * @param request the request to be sent.
    */
   async send(recipient: string, request: Request): Promise<void> {
-    // Calculate expirations
-    let iat = new Date(Math.floor(this.jwt.now()))
-    let exp = new Date(Math.floor(this.jwt.now() + 300000 * 60))
+    // Check if the current app still has credits
+    let app = await this.is.app(this.jwt.appID)
+    if (app.paid_actions == false) {
+      throw new Error(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    }
 
-    request['jti'] = uuidv4()
-    request['iss'] = this.jwt.appID
-    request['sub'] = recipient
-    request['iat'] = iat.toISOString()
-    request['exp'] = exp.toISOString()
-    request['cid'] = uuidv4()
-
-    const msg = new Message()
-
-    msg.setType(MsgType.MSG)
-    msg.setId(uuidv4())
-    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
-
+    let id = uuidv4()
     let devices = await this.is.devices(recipient)
-    msg.setRecipient(`${recipient}:${devices[0]}`)
 
-    let ciphertext = this.jwt.prepare(request)
-    msg.setCiphertext(ciphertext)
+    let j = this.buildRequest(recipient, request)
+    let ciphertext = this.jwt.toSignedJson(j)
 
-    this.ms.send(recipient, { data: msg.serializeBinary() })
+    var msgs = []
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, recipient, devices[i], ciphertext)
+      msgs.push(msg.serializeBinary())
+    }
+
+    this.ms.send(j.cid, { data: msgs, waitForResponse: false })
   }
 
   /**
@@ -197,5 +197,40 @@ export default class MessagingService {
       typ: 'identities.notify',
       description: message
     })
+  }
+
+  private buildRequest(selfid: string, request: Request): Request {
+    // Calculate expirations
+    let iat = new Date(Math.floor(this.jwt.now()))
+    let exp = new Date(Math.floor(this.jwt.now() + 300000 * 60))
+
+    request['jti'] = uuidv4()
+    request['iss'] = this.jwt.appID
+    request['sub'] = selfid
+    request['iat'] = iat.toISOString()
+    request['exp'] = exp.toISOString()
+    request['cid'] = uuidv4()
+
+    return request
+  }
+
+  async buildEnvelope(
+    id: string,
+    selfid: string,
+    device: string,
+    ciphertext: string
+  ): Promise<Message> {
+    console.log(id)
+    console.log(`${selfid}:${device}`)
+    console.log(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    const msg = new Message()
+    msg.setType(MsgType.MSG)
+    msg.setId(id)
+    msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
+    msg.setRecipient(`${selfid}:${device}`)
+    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    msg.setCiphertext(Buffer.from(ct))
+
+    return msg
   }
 }

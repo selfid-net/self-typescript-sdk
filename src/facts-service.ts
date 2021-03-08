@@ -61,7 +61,7 @@ export default class FactsService {
     selfid: string,
     facts: Fact[],
     opts?: { cid?: string; exp?: number; async?: boolean }
-  ): Promise<FactResponse | boolean> {
+  ): Promise<FactResponse> {
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
 
@@ -86,7 +86,7 @@ export default class FactsService {
     let devices = await this.is.devices(selfid)
 
     let j = this.buildRequest(selfid, facts, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     var msgs = []
     for (var i = 0; i < devices.length; i++) {
@@ -96,10 +96,12 @@ export default class FactsService {
 
     if (as) {
       console.log('sending ' + id)
-      let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
-      return true
+      this.ms.send(j.cid, { data: msgs, waitForResponse: false })
+      let res = new FactResponse()
+      res.status = '200'
+
+      return res
     }
-    console.log('requesting ' + id)
     let res = await this.ms.request(j.cid, msgs)
 
     return res
@@ -117,7 +119,7 @@ export default class FactsService {
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    msg.setCiphertext(ct)
+    msg.setCiphertext(Buffer.from(ct))
 
     return msg
   }
@@ -133,16 +135,30 @@ export default class FactsService {
     selfid: string,
     facts: Fact[],
     opts?: { cid?: string; exp?: number; intermediary?: string }
-  ) {
+  ): Promise<FactResponse> {
+    let options = opts ? opts : {}
+
+    // Check if the current app still has credits
+    let app = await this.is.app(this.jwt.appID)
+    if (app.paid_actions == false) {
+      throw new Error(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    }
+
+    let permited = await this.messagingService.isPermited(selfid)
+    if (!permited) {
+      throw new Error("You're not permitting connections from " + selfid)
+    }
+
     let id = uuidv4()
 
     // Get intermediary's device
-    let options = opts ? opts : {}
     let intermediary = options.intermediary ? options.intermediary : 'self_intermediary'
     let devices = await this.is.devices(intermediary)
 
     let j = this.buildRequest(selfid, facts, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     // Envelope
     var msgs = []

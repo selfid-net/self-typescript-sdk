@@ -87,6 +87,10 @@ export default class SelfSDK {
     sdk.jwt = await Jwt.build(appID, appKey, opts)
     let options = opts ? opts : {}
 
+    storageFolder = `${storageFolder}/apps/${sdk.jwt.appID}/devices/${sdk.jwt.deviceID}`
+    var shell = require('shelljs')
+    shell.mkdir('-p', storageFolder)
+
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
     if (options['encryptionClient'] == undefined) {
       sdk.encryptionClient = await Crypto.build(
@@ -100,24 +104,25 @@ export default class SelfSDK {
     }
 
     if (sdk.messagingURL === '') {
-      sdk.ms = new Messaging(
-        sdk.messagingURL,
-        sdk.jwt,
-        sdk.identityService,
-        sdk.encryptionClient,
-        {}
-      )
+      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService, sdk.encryptionClient, {
+        storageDir: storageFolder
+      })
     } else {
       sdk.ms = await Messaging.build(
         sdk.messagingURL,
         sdk.jwt,
         sdk.identityService,
         sdk.encryptionClient,
-        {}
+        { storageDir: storageFolder }
       )
     }
 
-    sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)
+    sdk.messagingService = new MessagingService(
+      sdk.jwt,
+      sdk.ms,
+      sdk.identityService,
+      sdk.encryptionClient
+    )
 
     let env = options['env'] ? options['env'] : '-'
     sdk.factsService = new FactsService(
