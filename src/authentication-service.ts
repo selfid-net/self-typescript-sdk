@@ -125,28 +125,15 @@ export default class AuthenticationService {
     let options = opts ? opts : {}
     let selfid = options.selfid ? options.selfid : '-'
     let body = this.jwt.toSignedJson(this.buildRequest(selfid, options))
-    console.log(body)
 
-    console.log('-----> 1')
     let qr = new QRCode()
-    console.log('-----> 2')
     qr.setTypeNumber(17)
-    console.log('-----> 3')
     qr.setErrorCorrectLevel(ErrorCorrectLevel.L)
-    console.log('-----> 4')
     qr.addData(body)
-    console.log('-----> 5')
-    try {
-      qr.make()
-    } catch (error) {
-      console.log(error)
-    }
-    console.log('-----> 6')
+    qr.make()
 
     let data = qr.toDataURL(5).split(',')
-    console.log('-----> 7')
     let buf = Buffer.from(data[1], 'base64')
-    console.log('-----> 8')
 
     return buf
   }
