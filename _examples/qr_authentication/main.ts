@@ -5,7 +5,7 @@ import { exit } from 'process';
 
 async function authenticate(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    let opts = {}
+    let opts = {'logLevel': 'debug'}
     if (process.env["SELF_ENV"] != "") {
         opts['env'] = process.env["SELF_ENV"]
     }
@@ -14,11 +14,11 @@ async function authenticate(appID: string, appSecret: string, selfID: string) {
 
     sdk.authentication().subscribe((res: any): any => {
         if(res.status !== "accepted") {
-            console.log("Authentication request has been rejected")
+            sdk.logger.warn("Authentication request has been rejected")
             exit()
         }
 
-        console.log(`User ${res.iss} is now authenticated 🤘`)
+        sdk.logger.info(`User ${res.iss} is now authenticated 🤘`)
         exit()
     })
 
@@ -27,7 +27,7 @@ async function authenticate(appID: string, appSecret: string, selfID: string) {
 
     const fs = require('fs').promises;
     await fs.writeFile('/tmp/qr.png', buf);
-    console.log("Open /tmp/qr.png and scan it with your device")
+    sdk.logger.info("Open /tmp/qr.png and scan it with your device")
 
     // Wait til the response is received
     const wait = (seconds) =>
