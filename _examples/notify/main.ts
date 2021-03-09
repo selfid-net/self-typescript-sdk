@@ -5,7 +5,12 @@ import { exit } from 'process';
 
 async function notify(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
+    let opts = {}
+    if (process.env["SELF_ENV"] != "") {
+        opts['env'] = process.env["SELF_ENV"]
+    }
+    let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
+    const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
     console.log("sending notification")
     await sdk.messaging().notify(selfID, "hello world!")
@@ -15,7 +20,6 @@ async function notify(appID: string, appSecret: string, selfID: string) {
 }
 
 async function main() {
-    console.log("managing connections")
     let appID = process.env["SELF_APP_ID"]
     let appSecret = process.env["SELF_APP_SECRET"]
     let selfID = process.env["SELF_USER_ID"]

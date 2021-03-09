@@ -5,17 +5,23 @@ import { exit } from 'process';
 
 async function manageConnections(appID: string, appSecret: string, user: string) {
     // const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build(appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
-    console.log("CONNECTIONS EXAMPLE")
+    let opts = {'logLevel': 'debug'}
+    if (process.env["SELF_ENV"] != "") {
+        opts['env'] = process.env["SELF_ENV"]
+    }
+    let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
+    const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
+    
+    sdk.logger.info("CONNECTIONS EXAMPLE")
 
     // Remove all existing connections
     let conns = await sdk.messaging().allowedConnections()
-    console.log("List existing connections")
-    console.log(" - connections : " + conns.join(","))
+    sdk.logger.info("List existing connections")
+    sdk.logger.info(` - connections : ${conns.join(",")}`)
 
     
     // Block connections from *
-    console.log("Block all connections")
+    sdk.logger.info("Block all connections")
     let success = await sdk.messaging().revokeConnection("*")
     if(!success) {
         throw new Error("problem revoking connection")
@@ -23,50 +29,48 @@ async function manageConnections(appID: string, appSecret: string, user: string)
 
     // List should be empty
     conns = await sdk.messaging().allowedConnections()
-    console.log(" - connections : " + conns.join(","))
+    sdk.logger.info(` - connections : ${conns.join(",")}`)
     
     // Allow connections from user
-    console.log("Permit connections from a specific ID")
+    sdk.logger.info("Permit connections from a specific ID")
     success = await sdk.messaging().permitConnection(user)
     if(!success) {
         throw new Error("problem permitting connection")
     }
     conns = await sdk.messaging().allowedConnections()
-    console.log(" - connections : " + conns.join(","))
+    sdk.logger.info(` - connections : ${conns.join(",")}`)
 
     
     // Allow connections from *
-    console.log("Permit all connections (replaces all other entries with a wildcard entry)")
+    sdk.logger.info("Permit all connections (replaces all other entries with a wildcard entry)")
     success = await sdk.messaging().permitConnection("*")
     if(!success) {
         throw new Error("problem permitting connection")
     }
     conns = await sdk.messaging().allowedConnections()
-    console.log(" - connections : " + conns.join(","))
-    console.log("")
+    sdk.logger.info(` - connections : ${conns.join(",")}`)
+    sdk.logger.info("")
     
     // Allow connections from user
-    console.log("Permit connection from a specific ID (no change as the list already contains a wildcard entry)")
+    sdk.logger.info("Permit connection from a specific ID (no change as the list already contains a wildcard entry)")
     success = await sdk.messaging().permitConnection(user)
     if(!success) {
         throw new Error("problem permitting connection")
     }
     conns = await sdk.messaging().allowedConnections()
-    console.log(" - connections : " + conns.join(","))
-    console.log("")
+    sdk.logger.info(` - connections : ${conns.join(",")}`)
+    sdk.logger.info("")
 
     sdk.stop()
     exit();
 }
 
 async function main() {
-    console.log("managing connections")
     let appID = process.env["SELF_APP_ID"]
     let appSecret = process.env["SELF_APP_SECRET"]
     let selfID = process.env["SELF_USER_ID"]
 
     await manageConnections(appID, appSecret, selfID);
-    console.log("managing done")
 }
 
 main();

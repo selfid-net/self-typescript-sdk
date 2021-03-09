@@ -1,6 +1,10 @@
 // Copyright 2020 Self Group Ltd. All Rights Reserved.
 
 import Jwt from './jwt'
+import SignatureGraph from './siggraph'
+import { logging, Logger } from './logging'
+
+const logger = logging.getLogger('core.self-sdk')
 
 /**
  * A PublicKey representation
@@ -13,17 +17,17 @@ type PublicKey = {
 /**
  * An identity object representing both apps and users.
  */
-type Identity = {
+export type Identity = {
   id: string
-  publicKeys: PublicKey[]
+  history: []
 }
 
 /**
  * An app object representing both apps.
  */
-type App = {
+export type App = {
   id: string
-  publicKeys: PublicKey[]
+  history: []
   name: string
   image: string
   paid_actions: boolean
@@ -56,6 +60,7 @@ export default class IdentityService {
    * @param selfid the user you want to query the devices.
    */
   async devices(selfid: string): Promise<string[]> {
+    logger.debug('getting devices')
     let devices: string[] = []
     let response: any
 
@@ -68,6 +73,7 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/identities/${selfid}/devices`, options)
     } catch (error) {
+      logger.warn(error)
       throw this.errInternal
     }
 
@@ -83,33 +89,24 @@ export default class IdentityService {
   }
 
   /**
-   * Gets a list with the public keys for a specific user.
-   * @param selfid the user's selfid you want the public keys.
+   * Returns a public key by id
+   * @param selfid identity id
+   * @param kid key id
    */
-  async publicKeys(selfid: string): Promise<PublicKey[]> {
-    let keys: any
-    let response: any
+  async publicKey(selfid: string, kid: string): Promise<string> {
+    let identity = await this.get(selfid)
+    let sg = await SignatureGraph.build(identity['history'])
+    let k = sg.keyByID(kid)
 
-    try {
-      const axios = require('axios').default
-      const options = {
-        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
-      }
+    return k.rawPublicKey
+  }
 
-      response = await axios.get(`${this.url}/v1/identities/${selfid}/public_keys`, options)
-    } catch (error) {
-      throw this.errInternal
-    }
+  async devicePublicKey(selfid: string, did: string): Promise<string> {
+    let identity = await this.get(selfid)
+    let sg = await SignatureGraph.build(identity['history'])
+    let k = sg.keyByDevice(did)
 
-    if (response.status === 200) {
-      return response.data
-    } else if (response.status === 401) {
-      throw this.errUnauthorized
-    } else if (response.status === 404) {
-      throw this.errUnexistingIdentity
-    }
-
-    return keys
+    return k.rawPublicKey
   }
 
   /**
@@ -129,6 +126,7 @@ export default class IdentityService {
   }
 
   private async getIdentity(selfid: string, typ: string): Promise<Identity | App> {
+    logger.debug('getting identity details')
     let identity: any
     let response: any
 
@@ -141,13 +139,13 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/${typ}/${selfid}`, options)
     } catch (error) {
+      logger.warn(`${error}`)
       throw this.errInternal
     }
 
     if (response.status === 200) {
       identity = response.data
-      identity.publicKeys = response.data.public_keys
-      delete identity.public_keys
+      identity.history = response.data.history
     } else if (response.status === 401) {
       throw this.errUnauthorized
     } else if (response.status === 404) {
@@ -155,5 +153,38 @@ export default class IdentityService {
     }
 
     return identity
+  }
+
+  async postRaw(url: string, body: any): Promise<number> {
+    try {
+      const axios = require('axios').default
+
+      let res = await axios({
+        method: 'post',
+        url: url,
+        data: body,
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      })
+      return res.status
+    } catch (error) {
+      logger.warn(`${error}`)
+      throw this.errInternal
+    }
+  }
+
+  async getRaw(url: string): Promise<any> {
+    try {
+      const axios = require('axios').default
+
+      let res = await axios({
+        method: 'get',
+        url: url,
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      })
+      return res
+    } catch (error) {
+      logger.warn(`${error}`)
+      throw this.errInternal
+    }
   }
 }

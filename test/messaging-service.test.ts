@@ -11,6 +11,7 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import MessagingService from '../src/messaging-service'
 import { AccessControlList } from 'self-protos/acl_pb'
 import { ACLCommand } from 'self-protos/aclcommand_pb'
+import EncryptionMock from './mocks/encryption-mock'
 
 describe('Messaging service', () => {
   let mss: MessagingService
@@ -28,11 +29,15 @@ describe('Messaging service', () => {
     const fakeURL = 'ws://localhost:8080'
     mockServer = new Server(fakeURL)
 
-    ms = new Messaging('', jwt, is)
+    let ec = new EncryptionMock()
+    ms = new Messaging('', jwt, is, ec)
+
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
-
-    mss = new MessagingService(jwt, ms, is)
+    mss = new MessagingService(jwt, ms, is, ec)
+    jest.spyOn(mss, 'fixEncryption').mockImplementation((msg: string): any => {
+      return msg
+    })
   })
 
   afterEach(async () => {
@@ -198,11 +203,10 @@ describe('Messaging service', () => {
       })
 
       const msMock = jest.spyOn(ms, 'send').mockImplementation(
-        (recipient: string, data): Promise<any | Response> => {
+        (cid: string, data): Promise<any | Response> => {
           // The cid is automatically generated
-          expect(recipient).toEqual('selfid')
-          // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+          expect(cid != undefined).toBeTruthy()
+          let msg = Message.deserializeBinary(data.data.valueOf()[0] as Uint8Array)
 
           // Envelope
           expect(msg.getId().length).toEqual(36)
@@ -237,11 +241,11 @@ describe('Messaging service', () => {
       })
 
       const msMock = jest.spyOn(ms, 'send').mockImplementation(
-        (recipient: string, data): Promise<any | Response> => {
+        (cid: string, data): Promise<any | Response> => {
           // The cid is automatically generated
-          expect(recipient).toEqual('selfid')
+          expect(cid != undefined).toBeTruthy()
           // The cid is automatically generated
-          let msg = Message.deserializeBinary(data.data.valueOf() as Uint8Array)
+          let msg = Message.deserializeBinary(data.data.valueOf()[0] as Uint8Array)
 
           // Envelope
           expect(msg.getId().length).toEqual(36)

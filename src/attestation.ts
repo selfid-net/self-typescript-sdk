@@ -16,6 +16,8 @@ export default class Attestation {
   operator: string
   factName: string
   value: string
+  is: IdentityService
+  jwt: Jwt
 
   public static async parse(
     name: string,
@@ -24,7 +26,6 @@ export default class Attestation {
     is: IdentityService
   ): Promise<any> {
     let payload = JSON.parse(Buffer.from(input.payload, 'base64').toString())
-    let pks = await is.publicKeys(payload.iss)
 
     let a = new Attestation()
 
@@ -35,8 +36,12 @@ export default class Attestation {
     a.expected_value = payload.expected_value
     a.operator = payload.operator
     a.factName = name
-    a.verified = jwt.verify(input, pks[0].key)
     a.value = payload[name]
+
+    const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
+    let header = JSON.parse(decode(input['protected']))
+    let k = await is.publicKey(payload.iss, header['kid'])
+    a.verified = jwt.verify(input, k)
 
     return a
   }

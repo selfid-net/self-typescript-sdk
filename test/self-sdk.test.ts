@@ -5,7 +5,7 @@ import AuthenticationService from '../src/authentication-service'
 import FactsService from '../src/facts-service'
 import MessagingService from '../src/messaging-service'
 import IdentityService from '../src/identity-service'
-import { WebSocket, Server } from 'mock-socket'
+import EncryptionMock from './mocks/encryption-mock'
 
 /**
  * SelfSDK test
@@ -20,7 +20,8 @@ describe('SelfSDK test', () => {
 
     sdk = await SelfSDK.build('appID', sk, 'random', '/tmp/.self_storage', {
       messagingURL: '',
-      ntp: false
+      ntp: false,
+      encryptionClient: new EncryptionMock()
     })
   })
 

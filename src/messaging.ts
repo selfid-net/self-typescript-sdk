@@ -12,6 +12,10 @@ import FactResponse from './fact-response'
 import * as fs from 'fs'
 import { openStdin } from 'process'
 import { v4 as uuidv4 } from 'uuid'
+import { Identity, App } from './identity-service'
+import { logging, Logger } from './logging'
+
+const defaultRequestTimeout = 120000
 
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
@@ -19,6 +23,7 @@ export interface Request {
   waitForResponse?: boolean
   responded?: boolean
   response?: any
+  timeout?: number
 }
 
 export default class Messaging {
@@ -30,7 +35,9 @@ export default class Messaging {
   callbacks: Map<string, (n: any) => any>
   is: IdentityService
   offsetPath: string
+  storageDir: string
   encryptionClient: Crypto
+  logger: Logger
 
   constructor(
     url: string,
@@ -52,11 +59,8 @@ export default class Messaging {
         this.offsetPath = opts.storageDir
       }
     }
-    if (!fs.existsSync(this.offsetPath)) {
-      console.log('creating file')
-      fs.mkdirSync(this.offsetPath)
-    }
     this.offsetPath = `${this.offsetPath}/${this.jwt.appID}:${this.jwt.deviceID}.offset`
+    this.logger = logging.getLogger('core.self-sdk')
 
     if (this.url !== '') {
       this.connect()
@@ -78,37 +82,42 @@ export default class Messaging {
   }
 
   private async setup() {
-    console.log('setting up')
+    this.logger.debug('setting up messaging')
     await this.wait_for_connection()
     await this.authenticate()
   }
 
   private async processIncommingMessage(input: string, offset: number, sender: string) {
     try {
-      let ciphertext = JSON.parse(Buffer.from(input, 'base64').toString())
-      let payload = JSON.parse(Buffer.from(ciphertext['payload'], 'base64').toString())
+      let ciphertext = Buffer.from(input, 'base64').toString()
       let issuer = sender.split(':')
-      this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
 
-      let pks = await this.is.publicKeys(payload.iss)
-      if (!this.jwt.verify(ciphertext, pks[0].key)) {
-        console.log('unverified message ' + payload.cid)
+      let plaintext = await this.encryptionClient.decrypt(ciphertext, issuer[0], issuer[1])
+      let payload = JSON.parse(plaintext)
+
+      const decode = (str: string): string => Buffer.from(str, 'base64').toString('binary')
+      let header = JSON.parse(decode(payload['protected']))
+      let k = await this.is.publicKey(issuer[0], header['kid'])
+
+      if (!this.jwt.verify(payload, k)) {
+        this.logger.info(`received unverified message ${payload.cid}`)
         return
       }
 
       this.setOffset(offset)
-      switch (payload.typ) {
+      let p = JSON.parse(decode(payload['payload']))
+      switch (p.typ) {
         case 'identities.facts.query.resp': {
-          await this.processResponse(payload, 'identities.facts.query.resp')
+          await this.processResponse(p, 'identities.facts.query.resp')
           break
         }
         case 'identities.authenticate.resp': {
-          await this.processResponse(payload, 'identities.authenticate.resp')
+          await this.processResponse(p, 'identities.authenticate.resp')
           break
         }
       }
     } catch (error) {
-      console.log(`skipping message ${error}`)
+      this.logger.info(`skipping message due ${error}`)
     }
   }
 
@@ -154,25 +163,24 @@ export default class Messaging {
   }
 
   private async onmessage(msg: Message) {
-    console.log(`received ${msg.getId()} (${msg.getType()})`)
+    this.logger.debug(`received ${msg.getId()} (${msg.getType()})`)
     switch (msg.getType()) {
       case MsgType.ERR: {
-        console.log(`error processing ${msg.getId()}`)
-        console.log(msg)
+        this.logger.info(`error processing ${msg.getId()}`)
         break
       }
       case MsgType.ACK: {
-        console.log(`acknowledged ${msg.getId()}`)
+        this.logger.debug(`acknowledged ${msg.getId()}`)
         this.mark_as_acknowledged(msg.getId())
         break
       }
       case MsgType.ACL: {
-        console.log(`ACL ${msg.getId()}`)
+        this.logger.debug(`ACL ${msg.getId()}`)
         this.processIncommingACL(msg.getId(), msg.getRecipient())
         break
       }
       case MsgType.MSG: {
-        console.log(`message received ${msg.getId()}`)
+        this.logger.debug(`message received ${msg.getId()}`)
         await this.processIncommingMessage(
           msg.getCiphertext_asB64(),
           msg.getOffset(),
@@ -185,7 +193,7 @@ export default class Messaging {
 
   /* istanbul ignore next */
   private connect() {
-    console.log('configuring ws')
+    this.logger.debug(`configuring websockets`)
     if (this.ws === undefined) {
       const WebSocket = require('ws')
       this.ws = new WebSocket(this.url)
@@ -230,6 +238,10 @@ export default class Messaging {
     if (!request.responded) {
       request.responded = false
     }
+    if (!request.timeout) {
+      request.timeout = Date.now() + defaultRequestTimeout
+    }
+
     this.send(id, request)
     return this.wait(id, request)
   }
@@ -248,9 +260,9 @@ export default class Messaging {
     if (!Array.isArray(request.data)) {
       this.ws.send(request.data)
     } else {
-      request.data.forEach(data => {
-        this.ws.send(data)
-      })
+      for (var i = 0; i < request.data.length; i++) {
+        this.ws.send(request.data[i])
+      }
     }
 
     this.requests.set(id, request)
@@ -260,14 +272,16 @@ export default class Messaging {
     // TODO (adriacidre) this methods should manage a waiting timeout.
     // TODO () ACK is based on JTI while Response on CID!!!!
     if (!request.waitForResponse) {
-      console.log('waiting for acknowledgement')
+      this.logger.debug(`waiting for acknowledgement`)
       request.acknowledged = await this.wait_for_ack(id)
-      console.log('do not need to wait for response')
+      this.logger.debug(`do not need to wait for response`)
       return request.acknowledged
     }
-    console.log('waiting for response')
+    this.logger.debug(`waiting for response ${id}`)
     await this.wait_for_response(id)
-    console.log('responded')
+    if (request.response) {
+      this.logger.debug(`response received`)
+    }
 
     return request.response
   }
@@ -287,10 +301,14 @@ export default class Messaging {
   }
 
   private wait_for_response(id: string): Promise<Response | undefined> {
-    console.log(`waiting for response ${id}`)
+    this.logger.debug(`waiting for response ${id}`)
     return new Promise(async (resolve, reject) => {
       while (this.requests.has(id)) {
         let req = this.requests.get(id)
+        if (req && req.timeout <= Date.now()) {
+          resolve()
+          break
+        }
         if (req && req.response) {
           resolve(req.response)
           break

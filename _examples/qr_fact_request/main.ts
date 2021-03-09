@@ -4,11 +4,16 @@ import SelfSDK from '../../src/self-sdk'
 import { exit } from 'process';
 
 async function qrFactRequest(appID: string, appSecret: string, selfID: string) {
-    //const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
+    // const SelfSDK = require("self-sdk");
+    let opts = {'logLevel': 'debug'}
+    if (process.env["SELF_ENV"] != "") {
+        opts['env'] = process.env["SELF_ENV"]
+    }
+    let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
+    const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
     sdk.facts().subscribe((res: any): any => {
-        console.log(res.attestationValuesFor('phone_number')[0])
+        sdk.logger.info(res.attestationValuesFor('phone_number')[0])
         exit()
     })
 
@@ -17,7 +22,7 @@ async function qrFactRequest(appID: string, appSecret: string, selfID: string) {
 
     const fs = require('fs').promises;
     await fs.writeFile('/tmp/qr.png', buf);
-    console.log("Open /tmp/qr.png and scan it with your device")
+    sdk.logger.info("Open /tmp/qr.png and scan it with your device")
 
     // Wait til the response is received
     const wait = (seconds) =>
@@ -31,7 +36,6 @@ async function qrFactRequest(appID: string, appSecret: string, selfID: string) {
 }
 
 async function main() {
-    console.log("managing qr authentication")
     let appID = process.env["SELF_APP_ID"]
     let appSecret = process.env["SELF_APP_SECRET"]
     let selfID = process.env["SELF_USER_ID"]

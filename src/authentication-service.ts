@@ -18,6 +18,7 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import MessagingService from './messaging-service'
 import Crypto from './crypto'
+import { logging, Logger } from './logging'
 
 type MessageProcessor = (n: number) => any
 
@@ -31,6 +32,7 @@ export default class AuthenticationService {
   env: string
   messagingService: MessagingService
   crypto: Crypto
+  logger: Logger
 
   /**
    * Constructs the AuthenticationService
@@ -46,6 +48,7 @@ export default class AuthenticationService {
     this.env = env
     this.messagingService = ms
     this.crypto = ec
+    this.logger = logging.getLogger('core.self-sdk')
   }
 
   /**
@@ -80,35 +83,46 @@ export default class AuthenticationService {
     let devices = await this.is.devices(selfid)
 
     let j = this.buildRequest(selfid, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, selfid, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
     if (as) {
-      console.log('sending ' + id)
+      this.logger.debug('sending ' + id)
       let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
       return true
     }
 
-    console.log('requesting ' + id)
+    this.logger.debug('requesting ' + id)
     let res = await this.ms.request(j.cid, msgs)
 
     return res.status === 'accepted'
   }
 
-  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+  async buildEnvelope(
+    id: string,
+    selfid: string,
+    device: string,
+    ciphertext: string
+  ): Promise<Message> {
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
+    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+
+    msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
+  }
+
+  fixEncryption(msg: string): any {
+    return Buffer.from(msg)
   }
 
   /**
@@ -121,7 +135,7 @@ export default class AuthenticationService {
     let body = this.jwt.toSignedJson(this.buildRequest(selfid, options))
 
     let qr = new QRCode()
-    qr.setTypeNumber(15)
+    qr.setTypeNumber(17)
     qr.setErrorCorrectLevel(ErrorCorrectLevel.L)
     qr.addData(body)
     qr.make()

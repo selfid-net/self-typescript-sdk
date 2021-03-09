@@ -19,8 +19,10 @@ import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 import MessagingService from './messaging-service'
 import Crypto from './crypto'
+import { logging, Logger } from './logging'
 
 type MessageProcessor = (n: number) => any
+const logger = logging.getLogger('core.self-sdk')
 
 /**
  * A service to manage fact requests
@@ -61,7 +63,7 @@ export default class FactsService {
     selfid: string,
     facts: Fact[],
     opts?: { cid?: string; exp?: number; async?: boolean }
-  ): Promise<FactResponse | boolean> {
+  ): Promise<FactResponse> {
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
 
@@ -86,36 +88,47 @@ export default class FactsService {
     let devices = await this.is.devices(selfid)
 
     let j = this.buildRequest(selfid, facts, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, selfid, d, ciphertext)
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, selfid, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
     if (as) {
-      console.log('sending ' + id)
-      let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
-      return true
+      logger.debug('sending ' + id)
+      this.ms.send(j.cid, { data: msgs, waitForResponse: false })
+      let res = new FactResponse()
+      res.status = '200'
+
+      return res
     }
-    console.log('requesting ' + id)
     let res = await this.ms.request(j.cid, msgs)
 
     return res
   }
 
-  buildEnvelope(id: string, selfid: string, device: string, ciphertext: string): Message {
+  async buildEnvelope(
+    id: string,
+    selfid: string,
+    device: string,
+    ciphertext: string
+  ): Promise<Message> {
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    msg.setCiphertext(this.crypto.encrypt(ciphertext, selfid, device))
+    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
   }
 
+  fixEncryption(msg: string): any {
+    return Buffer.from(msg)
+  }
   /**
    * Sends a request via an intermediary
    * @param selfid user identifier to send the fact request.
@@ -127,25 +140,39 @@ export default class FactsService {
     selfid: string,
     facts: Fact[],
     opts?: { cid?: string; exp?: number; intermediary?: string }
-  ) {
+  ): Promise<FactResponse> {
+    let options = opts ? opts : {}
+
+    // Check if the current app still has credits
+    let app = await this.is.app(this.jwt.appID)
+    if (app.paid_actions == false) {
+      throw new Error(
+        'Your credits have expired, please log in to the developer portal and top up your account.'
+      )
+    }
+
+    let permited = await this.messagingService.isPermited(selfid)
+    if (!permited) {
+      throw new Error("You're not permitting connections from " + selfid)
+    }
+
     let id = uuidv4()
 
     // Get intermediary's device
-    let options = opts ? opts : {}
     let intermediary = options.intermediary ? options.intermediary : 'self_intermediary'
     let devices = await this.is.devices(intermediary)
 
     let j = this.buildRequest(selfid, facts, opts)
-    let ciphertext = this.jwt.prepare(j)
+    let ciphertext = this.jwt.toSignedJson(j)
 
     // Envelope
     var msgs = []
-    devices.forEach(d => {
-      var msg = this.buildEnvelope(id, intermediary, d, ciphertext)
+    for (var i = 0; i < devices.length; i++) {
+      var msg = await this.buildEnvelope(id, intermediary, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
-    })
+    }
 
-    console.log('requesting ' + j.cid)
+    logger.debug(`requesting ${j.cid}`)
     let res = await this.ms.request(j.cid, msgs)
 
     return res
@@ -217,11 +244,11 @@ export default class FactsService {
     let cid = options.cid ? options.cid : uuidv4()
     let expTimeout = options.exp ? options.exp : 300000
 
-    facts.forEach(f => {
-      if (!Fact.isValid(f)) {
+    for (var i = 0; i < facts.length; i++) {
+      if (!Fact.isValid(facts[i])) {
         throw new TypeError('invalid facts')
       }
-    })
+    }
 
     // Calculate expirations
     let iat = new Date(Math.floor(this.jwt.now()))

@@ -2,8 +2,10 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import { NTPClient } from 'ntpclient'
+import { logging, Logger } from './logging'
 
 const _sodium = require('libsodium-wrappers')
+const logger = logging.getLogger('core.self-sdk')
 
 export interface JwtInput {
   protected: string
@@ -115,10 +117,11 @@ export default class Jwt {
         input.signature,
         this.sodium.base64_variants.URLSAFE_NO_PADDING
       )
-      let key = this.sodium.from_base64(pk, this.sodium.base64_variants.ORIGINAL_NO_PADDING)
+      let key = this.sodium.from_base64(pk, this.sodium.base64_variants.URLSAFE_NO_PADDING)
 
       return this.sodium.crypto_sign_verify_detached(sig, msg, key)
     } catch (error) {
+      logger.warn(error)
       return false
     }
   }
@@ -149,7 +152,11 @@ export default class Jwt {
     return this.encode(`{"alg":"EdDSA","typ":"JWT","kid":"` + this.appKeyID + `"}`)
   }
 
-  encode(input: string) {
+  encode(input: string): string {
     return this.sodium.to_base64(input, this.sodium.base64_variants.URLSAFE_NO_PADDING)
+  }
+
+  decode(input: string): string {
+    return this.sodium.from_base64(input, this.sodium.base64_variants.URLSAFE_NO_PADDING)
   }
 }

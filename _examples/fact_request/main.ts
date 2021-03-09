@@ -2,14 +2,30 @@
 
 import SelfSDK from '../../src/self-sdk'
 import { exit } from 'process';
+import { logging } from '../../src/logging';
 
 async function request(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    const sdk = await SelfSDK.build( appID, appSecret, "random", __dirname + "/.self_storage", {env: "review"});
+    let opts = {'logLevel': 'debug'}
+    if (process.env["SELF_ENV"] != "") {
+        opts['env'] = process.env["SELF_ENV"]
+    }
+    let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
+    const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
-    console.log("requesting facts...")
+    sdk.logger.info(`sending a fact request (phone_number) to ${selfID}`)
+    sdk.logger.info(`waiting for user input`)
+
     let res = await sdk.facts().request(selfID, [{ fact: 'phone_number' }])
-    console.log(res.attestationValuesFor('phone_number')[0])
+
+    if (!res) {
+      sdk.logger.warn(`fact request has timed out`)
+    } else if (res.status === 'accepted') {
+      let pn = res.attestationValuesFor('phone_number')[0]
+      sdk.logger.info(`${selfID} phone number is "${pn}"`)
+    } else {
+      sdk.logger.warn(`${selfID} has rejected your authentication request`)
+    }
 
     sdk.stop()
     exit();

@@ -9,6 +9,7 @@ import MessagingService from './messaging-service'
 import Jwt from './jwt'
 import Messaging from './messaging'
 import Crypto from './crypto'
+import { logging, LogEntry, Logger } from './logging'
 
 /**
  * SelfSDK allow you interact with self network.
@@ -23,6 +24,7 @@ export default class SelfSDK {
   autoReconnect: boolean
   jwt: any
   ms: any
+  logger: Logger
 
   private authenticationService: any
   private factsService: any
@@ -80,40 +82,64 @@ export default class SelfSDK {
       env?: string
       autoReconnect?: boolean
       ntp?: boolean
+      encryptionClient?: Crypto
+      logLevel?: string
     }
   ): Promise<SelfSDK> {
+    let options = opts ? opts : {}
+    let logLevel = 'info'
+    if (options['logLevel'] != undefined) {
+      logLevel = options['logLevel']
+    }
+
+    logging
+      .configure({
+        minLevels: { core: logLevel }
+      })
+      .registerConsoleLogger()
+
     const sdk = new SelfSDK(appID, appKey, storageKey, opts)
+    sdk.logger = logging.getLogger('core.self-sdk')
     sdk.jwt = await Jwt.build(appID, appKey, opts)
 
+    storageFolder = `${storageFolder}/apps/${sdk.jwt.appID}/devices/${sdk.jwt.deviceID}`
+    var shell = require('shelljs')
+    shell.mkdir('-p', storageFolder)
+
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
-    sdk.encryptionClient = new Crypto(
-      sdk.identityService,
-      sdk.jwt.deviceID,
-      storageFolder,
-      storageKey
-    )
-    if (sdk.messagingURL === '') {
-      sdk.ms = new Messaging(
-        sdk.messagingURL,
-        sdk.jwt,
+    if (options['encryptionClient'] == undefined) {
+      sdk.encryptionClient = await Crypto.build(
         sdk.identityService,
-        sdk.encryptionClient,
-        {}
+        sdk.jwt.deviceID,
+        storageFolder,
+        storageKey
       )
+    } else {
+      sdk.encryptionClient = options['encryptionClient']
+    }
+
+    if (sdk.messagingURL === '') {
+      sdk.ms = new Messaging(sdk.messagingURL, sdk.jwt, sdk.identityService, sdk.encryptionClient, {
+        storageDir: storageFolder
+      })
     } else {
       sdk.ms = await Messaging.build(
         sdk.messagingURL,
         sdk.jwt,
         sdk.identityService,
         sdk.encryptionClient,
-        {}
+        { storageDir: storageFolder }
       )
     }
 
-    sdk.messagingService = new MessagingService(sdk.jwt, sdk.ms, sdk.identityService)
+    sdk.messagingService = new MessagingService(
+      sdk.jwt,
+      sdk.ms,
+      sdk.identityService,
+      sdk.encryptionClient
+    )
 
-    let options = opts ? opts : {}
-    let env = options.env ? options.env : '-'
+    let env = options['env'] ? options['env'] : '-'
     sdk.factsService = new FactsService(
       sdk.jwt,
       sdk.messagingService,
