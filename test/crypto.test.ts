@@ -65,8 +65,16 @@ describe('crypto', () => {
       }
     )
 
-    let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice/', 'storage_key_alice')
-    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob/', 'storage_key_bob')
+    const fs = require('fs').promises
+    fs.rmdir('/tmp/alice/', { recursive: true }).then(() => console.log('directory removed!'))
+    fs.rmdir('/tmp/bob/', { recursive: true }).then(() => console.log('directory removed!'))
+
+    var shell = require('shelljs')
+    shell.mkdir('-p', '/tmp/alice/')
+    shell.mkdir('-p', '/tmp/bob/')
+
+    let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice', 'storage_key_alice')
+    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob', 'storage_key_bob')
 
     let ciphertext = await aliceC.encrypt('hello bob', 'bobID', '1')
     let plaintext = await bobC.decrypt(ciphertext, 'aliceID', '1')

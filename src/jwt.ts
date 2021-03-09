@@ -2,8 +2,10 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import { NTPClient } from 'ntpclient'
+import { logging, Logger } from './logging'
 
 const _sodium = require('libsodium-wrappers')
+const logger = logging.getLogger('core.self-sdk')
 
 export interface JwtInput {
   protected: string
@@ -119,7 +121,7 @@ export default class Jwt {
 
       return this.sodium.crypto_sign_verify_detached(sig, msg, key)
     } catch (error) {
-      console.log(error)
+      logger.warn(error)
       return false
     }
   }

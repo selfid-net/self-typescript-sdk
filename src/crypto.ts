@@ -124,7 +124,7 @@ export default class Crypto {
     return ciphertext
   }
 
-  public decrypt(message: string, sender: string, sender_device: string): Promise<string> {
+  public decrypt(message: string, sender: string, sender_device: string): string {
     let session_file_name = this.sessionPath(sender, sender_device)
     let session_with_bob: any
 
@@ -204,11 +204,11 @@ export default class Crypto {
     return plaintextext
   }
 
-  private accountPath(): string {
+  public accountPath(): string {
     return `${this.storageFolder}/account.pickle`
   }
 
-  private sessionPath(selfid: string, device: string): string {
+  public sessionPath(selfid: string, device: string): string {
     return `${this.storageFolder}/${selfid}:${device}-session.pickle`
   }
 }

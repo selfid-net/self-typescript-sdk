@@ -1,5 +1,4 @@
 // Copyright 2020 Self Group Ltd. All Rights Reserved.
-
 const ACTION_ADD = 'key.add'
 const ACTION_REVOKE = 'key.revoke'
 const KEY_TYPE_DEVICE = 'device.key'
@@ -318,8 +317,6 @@ export default class SignatureGraph {
     }
 
     if (!(operation.signingKey in this.keys)) {
-      console.log(this.keys)
-      console.log(operation.signingKey)
       throw new Error('operation specifies a signing key that does not exist (B)')
     }
     let parent = this.keys[operation.signingKey]

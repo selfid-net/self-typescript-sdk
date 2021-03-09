@@ -3,6 +3,7 @@
 import Attestation from './attestation'
 import Jwt from './jwt'
 import IdentityService from './identity-service'
+import { logging, Logger } from './logging'
 
 const FACT_EMAIL = 'email_address'
 const FACT_PHONE = 'phone_number'
@@ -60,6 +61,7 @@ let factsForDL = [
 ]
 
 let factsForUser = [FACT_DOCUMENT_NUMBER, FACT_DISPLAY_NAME, FACT_EMAIL, FACT_PHONE]
+const logger = logging.getLogger('core.self-sdk')
 
 export default class Fact {
   fact: string
@@ -100,7 +102,7 @@ export default class Fact {
     let errInvalidFactName = 'provided fact does not specify a name'
 
     if (input.fact == '') {
-      console.log(errInvalidFactName)
+      logger.warn(errInvalidFactName)
       return false
     }
 
@@ -117,21 +119,21 @@ export default class Fact {
         }
         if (s == SOURCE_PASSPORT || s == SOURCE_IDENTITY_CARD) {
           if (!factsForPassport.includes(input.fact)) {
-            console.log(errInvalidFactToSource)
+            logger.warn(errInvalidFactToSource)
             valid = false
             return
           }
         }
         if (s == SOURCE_DRIVING_LICENSE) {
           if (!factsForDL.includes(input.fact)) {
-            console.log(errInvalidFactToSource)
+            logger.warn(errInvalidFactToSource)
             valid = false
             return
           }
         }
         if (s == SOURCE_USER_SPECIFIED) {
           if (!factsForUser.includes(input.fact)) {
-            console.log(errInvalidFactToSource)
+            logger.warn(errInvalidFactToSource)
             valid = false
             return
           }

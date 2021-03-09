@@ -5,25 +5,30 @@ import { exit } from 'process';
 
 async function request(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    let opts = {}
+    let opts = {'logLevel': 'debug'}
     if (process.env["SELF_ENV"] != "") {
         opts['env'] = process.env["SELF_ENV"]
     }
     let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
     const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
-    console.log("requesting facts through intermediary...")
+    sdk.logger.info(`sending fact request through an intermediary to ${selfID}`)
+    sdk.logger.info(`waiting for user input`)
     let res = await sdk.facts().requestViaIntermediary(selfID, [{
-        fact: 'email_address',
+        fact: 'phone_number',
         operator: '==',
         sources: ['user_specified'],
-        expected_value: 'test@test.org'
+        expected_value: '+44111222333'
     }])
-    if(res.status === "unauthorized") {
-        console.log("you are unauthorized to run this action")
+    if(!res) {
+        sdk.logger.warn(`fact request has timed out`)
+    } else if(res.status === "unauthorized") {
+        sdk.logger.warn("you are unauthorized to run this action")
+    }else if (res.status === 'accepted') {
+        sdk.logger.info("your assertion is....")
+        sdk.logger.info(res.attestationValuesFor('phone_number')[0])
     } else {
-        console.log("your assertion is....")
-        console.log(res.attestationValuesFor('email_address')[0])
+        sdk.logger.info("your request has been rejected")
     }
 
     sdk.stop()

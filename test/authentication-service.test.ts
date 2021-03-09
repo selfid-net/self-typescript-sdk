@@ -38,9 +38,13 @@ describe('AuthenticationService', () => {
     ms = new Messaging('', jwt, is, ec)
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
-    messagingService = new MessagingService(jwt, ms, is)
+    messagingService = new MessagingService(jwt, ms, is, ec)
 
     auth = new AuthenticationService(jwt, messagingService, is, ec, 'test')
+
+    jest.spyOn(auth, 'fixEncryption').mockImplementation((msg: string): any => {
+      return msg
+    })
   })
 
   afterEach(async () => {

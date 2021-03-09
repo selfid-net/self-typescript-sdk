@@ -329,7 +329,7 @@ describe('messaging', () => {
 
   describe('onmessage', () => {
     it('type error', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(ms.logger, 'info').mockImplementation(() => {})
 
       let msg = new Message()
       msg.setId('cid')
@@ -340,7 +340,7 @@ describe('messaging', () => {
     })
 
     it('type acknowledge', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(ms.logger, 'debug').mockImplementation(() => {})
 
       let msg = new Message()
       msg.setId('cid')
@@ -351,7 +351,7 @@ describe('messaging', () => {
     })
 
     it('type ACL', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(ms.logger, 'debug').mockImplementation(() => {})
 
       let msg = new Message()
       msg.setId('cid')
@@ -362,9 +362,8 @@ describe('messaging', () => {
         expect(consoleSpy).toHaveBeenCalledWith('ACL cid')
       }
     })
-
     it('type MSG', async () => {
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+      const consoleSpy = jest.spyOn(ms.logger, 'debug').mockImplementation(() => {})
 
       let msg = new Message()
       msg.setId('cid')

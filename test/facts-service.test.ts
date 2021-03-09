@@ -39,9 +39,12 @@ describe('FactsService', () => {
     ms = new Messaging('', jwt, is, ec)
     ms.ws = new WebSocket(fakeURL)
     ms.connected = true
-    messagingService = new MessagingService(jwt, ms, is)
+    messagingService = new MessagingService(jwt, ms, is, ec)
 
     fs = new FactsService(jwt, messagingService, is, ec, 'test')
+    jest.spyOn(fs, 'fixEncryption').mockImplementation((msg: string): any => {
+      return msg
+    })
   })
 
   afterEach(async () => {

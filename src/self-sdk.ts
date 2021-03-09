@@ -9,6 +9,7 @@ import MessagingService from './messaging-service'
 import Jwt from './jwt'
 import Messaging from './messaging'
 import Crypto from './crypto'
+import { logging, LogEntry, Logger } from './logging'
 
 /**
  * SelfSDK allow you interact with self network.
@@ -23,6 +24,7 @@ export default class SelfSDK {
   autoReconnect: boolean
   jwt: any
   ms: any
+  logger: Logger
 
   private authenticationService: any
   private factsService: any
@@ -81,11 +83,24 @@ export default class SelfSDK {
       autoReconnect?: boolean
       ntp?: boolean
       encryptionClient?: Crypto
+      logLevel?: string
     }
   ): Promise<SelfSDK> {
-    const sdk = new SelfSDK(appID, appKey, storageKey, opts)
-    sdk.jwt = await Jwt.build(appID, appKey, opts)
     let options = opts ? opts : {}
+    let logLevel = 'info'
+    if (options['logLevel'] != undefined) {
+      logLevel = options['logLevel']
+    }
+
+    logging
+      .configure({
+        minLevels: { core: logLevel }
+      })
+      .registerConsoleLogger()
+
+    const sdk = new SelfSDK(appID, appKey, storageKey, opts)
+    sdk.logger = logging.getLogger('core.self-sdk')
+    sdk.jwt = await Jwt.build(appID, appKey, opts)
 
     storageFolder = `${storageFolder}/apps/${sdk.jwt.appID}/devices/${sdk.jwt.deviceID}`
     var shell = require('shelljs')

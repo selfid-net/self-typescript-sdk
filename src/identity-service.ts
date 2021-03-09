@@ -2,6 +2,9 @@
 
 import Jwt from './jwt'
 import SignatureGraph from './siggraph'
+import { logging, Logger } from './logging'
+
+const logger = logging.getLogger('core.self-sdk')
 
 /**
  * A PublicKey representation
@@ -57,7 +60,7 @@ export default class IdentityService {
    * @param selfid the user you want to query the devices.
    */
   async devices(selfid: string): Promise<string[]> {
-    console.log('getting devices')
+    logger.debug('getting devices')
     let devices: string[] = []
     let response: any
 
@@ -70,7 +73,7 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/identities/${selfid}/devices`, options)
     } catch (error) {
-      console.log(error)
+      logger.warn(error)
       throw this.errInternal
     }
 
@@ -123,7 +126,7 @@ export default class IdentityService {
   }
 
   private async getIdentity(selfid: string, typ: string): Promise<Identity | App> {
-    console.log('getting identity details')
+    logger.debug('getting identity details')
     let identity: any
     let response: any
 
@@ -136,7 +139,7 @@ export default class IdentityService {
 
       response = await axios.get(`${this.url}/v1/${typ}/${selfid}`, options)
     } catch (error) {
-      console.log(error)
+      logger.warn(`${error}`)
       throw this.errInternal
     }
 
@@ -164,7 +167,7 @@ export default class IdentityService {
       })
       return res.status
     } catch (error) {
-      console.log('postRaw ' + url + ' error: ' + error)
+      logger.warn(`${error}`)
       throw this.errInternal
     }
   }
@@ -180,7 +183,7 @@ export default class IdentityService {
       })
       return res
     } catch (error) {
-      console.log('getRaw ' + url + ' error: ' + error)
+      logger.warn(`${error}`)
       throw this.errInternal
     }
   }

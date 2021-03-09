@@ -11,6 +11,9 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import { ACLCommand } from 'self-protos/aclcommand_pb'
 import { Message } from 'self-protos/message_pb'
 import Crypto from './crypto'
+import { logging, Logger } from './logging'
+
+const logger = logging.getLogger('core.self-sdk')
 
 export interface Request {
   [details: string]: any
@@ -57,7 +60,7 @@ export default class MessagingService {
    * @returns a response
    */
   async permitConnection(selfid: string): Promise<boolean | Response> {
-    console.log('permitting connection')
+    logger.debug('permitting connection')
     let someYears = 999 * 365 * 24 * 60 * 60 * 1000
 
     let payload = this.jwt.prepare({
@@ -93,7 +96,7 @@ export default class MessagingService {
    * @returns a list of ACL rules
    */
   async allowedConnections(): Promise<String[]> {
-    console.log('listing allowed connections')
+    logger.debug('listing allowed connections')
     let connections: ACLRule[] = []
 
     const msg = new AccessControlList()
@@ -129,7 +132,7 @@ export default class MessagingService {
    * @returns Response
    */
   async revokeConnection(selfid: string): Promise<boolean | Response> {
-    console.log('revoking connection')
+    logger.debug('revoking connection')
 
     let payload = this.jwt.prepare({
       iss: this.jwt.appID,
@@ -220,17 +223,18 @@ export default class MessagingService {
     device: string,
     ciphertext: string
   ): Promise<Message> {
-    console.log(id)
-    console.log(`${selfid}:${device}`)
-    console.log(`${this.jwt.appID}:${this.jwt.deviceID}`)
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    msg.setCiphertext(Buffer.from(ct))
+    msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
+  }
+
+  fixEncryption(msg: string): any {
+    return Buffer.from(msg)
   }
 }

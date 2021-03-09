@@ -19,8 +19,10 @@ import { Message } from 'self-protos/message_pb'
 import FactResponse from './fact-response'
 import MessagingService from './messaging-service'
 import Crypto from './crypto'
+import { logging, Logger } from './logging'
 
 type MessageProcessor = (n: number) => any
+const logger = logging.getLogger('core.self-sdk')
 
 /**
  * A service to manage fact requests
@@ -95,7 +97,7 @@ export default class FactsService {
     }
 
     if (as) {
-      console.log('sending ' + id)
+      logger.debug('sending ' + id)
       this.ms.send(j.cid, { data: msgs, waitForResponse: false })
       let res = new FactResponse()
       res.status = '200'
@@ -119,11 +121,14 @@ export default class FactsService {
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    msg.setCiphertext(Buffer.from(ct))
+    msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
   }
 
+  fixEncryption(msg: string): any {
+    return Buffer.from(msg)
+  }
   /**
    * Sends a request via an intermediary
    * @param selfid user identifier to send the fact request.
@@ -167,7 +172,7 @@ export default class FactsService {
       msgs.push(msg.serializeBinary())
     }
 
-    console.log('requesting ' + j.cid)
+    logger.debug(`requesting ${j.cid}`)
     let res = await this.ms.request(j.cid, msgs)
 
     return res

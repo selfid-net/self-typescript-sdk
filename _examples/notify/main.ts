@@ -20,7 +20,6 @@ async function notify(appID: string, appSecret: string, selfID: string) {
 }
 
 async function main() {
-    console.log("managing connections")
     let appID = process.env["SELF_APP_ID"]
     let appSecret = process.env["SELF_APP_SECRET"]
     let selfID = process.env["SELF_USER_ID"]

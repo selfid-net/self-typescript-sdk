@@ -18,6 +18,7 @@ import { MsgType } from 'self-protos/msgtype_pb'
 import { Message } from 'self-protos/message_pb'
 import MessagingService from './messaging-service'
 import Crypto from './crypto'
+import { logging, Logger } from './logging'
 
 type MessageProcessor = (n: number) => any
 
@@ -31,6 +32,7 @@ export default class AuthenticationService {
   env: string
   messagingService: MessagingService
   crypto: Crypto
+  logger: Logger
 
   /**
    * Constructs the AuthenticationService
@@ -46,6 +48,7 @@ export default class AuthenticationService {
     this.env = env
     this.messagingService = ms
     this.crypto = ec
+    this.logger = logging.getLogger('core.self-sdk')
   }
 
   /**
@@ -89,12 +92,12 @@ export default class AuthenticationService {
     }
 
     if (as) {
-      console.log('sending ' + id)
+      this.logger.debug('sending ' + id)
       let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
       return true
     }
 
-    console.log('requesting ' + id)
+    this.logger.debug('requesting ' + id)
     let res = await this.ms.request(j.cid, msgs)
 
     return res.status === 'accepted'
@@ -112,9 +115,14 @@ export default class AuthenticationService {
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
     let ct = await this.crypto.encrypt(ciphertext, selfid, device)
-    msg.setCiphertext(Buffer.from(ct))
+
+    msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
+  }
+
+  fixEncryption(msg: string): any {
+    return Buffer.from(msg)
   }
 
   /**

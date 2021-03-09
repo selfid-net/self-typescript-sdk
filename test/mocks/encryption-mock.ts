@@ -9,19 +9,25 @@ export default class EncryptionMock {
   storageFolder: string
   path: string
   account: Account
-  accountPickleFile: string
 
   public async encrypt(
     message: string,
     recipient: string,
     recipientDevice: string
   ): Promise<string> {
+    const encode = (str: string): string => Buffer.from(str, 'binary').toString('base64')
+    return encode(message)
+  }
+
+  public decrypt(message: string, sender: string, sender_device: string): string {
     return message
   }
 
-  public decrypt(message: string, sender: string, sender_device: string): Promise<string> {
-    return new Promise(resolve => {
-      message
-    })
+  public accountPath(): string {
+    return `/tmp/account.pickle`
+  }
+
+  public sessionPath(selfid: string, device: string): string {
+    return `/tmp/random-session.pickle`
   }
 }
