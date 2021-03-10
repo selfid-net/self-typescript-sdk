@@ -113,7 +113,7 @@ describe('Messaging service', () => {
   describe('MessagingService::allowedConnections', () => {
     it('happy path', async () => {
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any | Response> => {
+        (cid: string, uuid: string, data): Promise<any | Response> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
@@ -123,7 +123,6 @@ describe('Messaging service', () => {
           expect(msg.getId().length).toEqual(36)
           expect(msg.getType()).toEqual(MsgType.ACL)
           expect(msg.getCommand()).toEqual(ACLCommand.LIST)
-
           return new Promise(resolve => {
             resolve(['a', 'b'])
           })
@@ -138,7 +137,7 @@ describe('Messaging service', () => {
   describe('MessagingService::isPermitted', () => {
     it('permissions by id', async () => {
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any | Response> => {
+        (cid: string, uuid: string, data): Promise<any | Response> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
@@ -160,7 +159,7 @@ describe('Messaging service', () => {
     })
     it('permissions by wildcard', async () => {
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any | Response> => {
+        (cid: string, uuid: string, data): Promise<any | Response> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated

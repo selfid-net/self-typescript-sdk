@@ -17,7 +17,7 @@ async function authenticate(appID: string, appSecret: string, selfID: string) {
     try {
         let res = await sdk.authentication().request(selfID)
         console.log(res)
-        if(res.accepted == true) {
+        if(res.isAccepted() == true) {
             sdk.logger.info(`${res.selfID} is now authenticated 🤘`)
         } else if(res.accepted == false) {
             sdk.logger.warn(`${res.selfID} has rejected your authentication request`)

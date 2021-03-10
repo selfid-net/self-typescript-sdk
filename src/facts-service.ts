@@ -179,6 +179,9 @@ export default class FactsService {
 
     logger.debug(`requesting ${j.cid}`)
     let res = await this.ms.request(j.cid, id, msgs)
+    if ('errorMessage' in res) {
+      throw new Error(res.errorMessage)
+    }
 
     return res
   }

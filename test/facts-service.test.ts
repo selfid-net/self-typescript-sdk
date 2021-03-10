@@ -84,7 +84,7 @@ describe('FactsService', () => {
       )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
@@ -175,9 +175,7 @@ describe('FactsService', () => {
     })
   })
 
-  /*
   describe('FactsService::requestViaIntermediary', () => {
-      
     it('happy path', async () => {
       const axios = require('axios')
       jest.mock('axios')
@@ -186,8 +184,16 @@ describe('FactsService', () => {
         data: ['deviceID']
       })
 
+      jest.spyOn(messagingService, 'isPermited').mockImplementation(
+        (selfid: string): Promise<Boolean> => {
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
@@ -229,8 +235,16 @@ describe('FactsService', () => {
         data: ['deviceID']
       })
 
+      jest.spyOn(messagingService, 'isPermited').mockImplementation(
+        (selfid: string): Promise<Boolean> => {
+          return new Promise(resolve => {
+            resolve(true)
+          })
+        }
+      )
+
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           // The cid is automatically generated
           expect(cid).toEqual('cid')
           // The cid is automatically generated
@@ -254,7 +268,6 @@ describe('FactsService', () => {
       expect(res).toBeTruthy()
     })
   })
-  */
 
   describe('FactsService::generateDeepLink', () => {
     it('happy path', async () => {

@@ -78,7 +78,7 @@ describe('AuthenticationService', () => {
       )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           // The cid is automatically generated
           expect(cid.length).toEqual(36)
           // The cid is automatically generated
@@ -190,7 +190,7 @@ describe('AuthenticationService', () => {
       )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           return new Promise(resolve => {
             resolve({ status: 'rejected' })
           })
@@ -224,7 +224,7 @@ describe('AuthenticationService', () => {
       )
 
       const msMock = jest.spyOn(ms, 'request').mockImplementation(
-        (cid: string, data): Promise<any> => {
+        (cid: string, uuid: string, data): Promise<any> => {
           // The cid is automatically generated
           expect(cid).toEqual('cid')
           // The cid is automatically generated

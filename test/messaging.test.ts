@@ -298,7 +298,8 @@ describe('messaging', () => {
     it('happy path', async () => {
       const fakeURL = 'ws://localhost:8080'
       const mockServer = new Server(fakeURL)
-      const uuid = 'cid'
+      const cid = 'cid'
+      const uuid = 'uuid'
       const reqBody = 'foo'
       const resBody = 'bar'
 
@@ -307,12 +308,12 @@ describe('messaging', () => {
           expect(input).toEqual(reqBody)
 
           // Stop listening for response
-          let req = ms.requests.get(uuid)
+          let req = ms.requests.get(cid)
           req.acknowledged = true
           req.responded = true
           req.response = resBody
 
-          ms.requests.set(uuid, req)
+          ms.requests.set(cid, req)
         })
         socket.on('close', () => {})
       })
@@ -320,7 +321,7 @@ describe('messaging', () => {
       ms.ws = new WebSocket(fakeURL)
       ms.connected = true
 
-      let res = await ms.request(uuid, reqBody)
+      let res = await ms.request(cid, uuid, reqBody)
       expect(res).toEqual(resBody)
 
       mockServer.close()
@@ -328,17 +329,6 @@ describe('messaging', () => {
   })
 
   describe('onmessage', () => {
-    it('type error', async () => {
-      const consoleSpy = jest.spyOn(ms.logger, 'info').mockImplementation(() => {})
-
-      let msg = new Message()
-      msg.setId('cid')
-      msg.setType(MsgType.ERR)
-      await ms['onmessage'](msg)
-
-      expect(consoleSpy).toHaveBeenCalledWith('error processing cid')
-    })
-
     it('type acknowledge', async () => {
       const consoleSpy = jest.spyOn(ms.logger, 'debug').mockImplementation(() => {})
 
