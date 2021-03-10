@@ -19,6 +19,7 @@ const defaultRequestTimeout = 120000
 
 export interface Request {
   data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
+  uuid?: string
   acknowledged?: boolean
   waitForResponse?: boolean
   responded?: boolean
@@ -167,9 +168,29 @@ export default class Messaging {
     switch (msg.getType()) {
       case MsgType.ERR: {
         let ma = msg.toArray()
-        this.logger.warn(`error processing ${msg.getId()} ${ma[ma.length - 1]}`)
-        // TODO(@adriacidre) If we receive an error message, we should try to
-        // relate it with its request and complete the request
+        // this.logger.warn(`error processing ${msg.getId()} ${ma[ma.length - 1]}`)
+        let sw = 0
+        Array.from(this.requests.keys()).forEach(key => {
+          if (this.requests.get(key).uuid == msg.getId()) {
+            let r = this.requests.get(key)
+            r.response = { errorMessage: ma[ma.length - 1] }
+            r.acknowledged = true
+            r.responded = true
+            this.requests.set(key, r)
+            sw = 1
+          }
+        })
+
+        if (sw == 1) {
+          break
+        }
+
+        Array.from(this.callbacks.keys()).forEach(key => {
+          if (this.callbacks[key].uuid == msg.getId()) {
+            let fn = this.callbacks[key]
+            fn(undefined)
+          }
+        })
         break
       }
       case MsgType.ACK: {
@@ -227,7 +248,8 @@ export default class Messaging {
     msg.setDevice(this.jwt.deviceID)
 
     await this.send_and_wait(msg.getId(), {
-      data: msg.serializeBinary()
+      data: msg.serializeBinary(),
+      uuid: msg.getId()
     })
   }
 
@@ -251,10 +273,12 @@ export default class Messaging {
 
   async request(
     id: string,
+    uuid: string,
     data: string | ArrayBuffer | SharedArrayBuffer | Blob | ArrayBufferView | Array<string>
   ): Promise<any> {
     return this.send_and_wait(id, {
       data: data,
+      uuid: uuid,
       waitForResponse: true
     })
   }

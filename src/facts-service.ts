@@ -104,7 +104,12 @@ export default class FactsService {
 
       return res
     }
-    let res = await this.ms.request(j.cid, msgs)
+
+    logger.debug(`requesting ${id}`)
+    let res = await this.ms.request(j.cid, id, msgs)
+    if ('errorMessage' in res) {
+      throw new Error(res.errorMessage)
+    }
 
     return res
   }
@@ -173,7 +178,7 @@ export default class FactsService {
     }
 
     logger.debug(`requesting ${j.cid}`)
-    let res = await this.ms.request(j.cid, msgs)
+    let res = await this.ms.request(j.cid, id, msgs)
 
     return res
   }

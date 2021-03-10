@@ -104,7 +104,7 @@ export default class MessagingService {
     msg.setId(uuidv4())
     msg.setCommand(ACLCommand.LIST)
 
-    let res = await this.ms.request(msg.getId(), msg.serializeBinary())
+    let res = await this.ms.request(msg.getId(), msg.getId(), msg.serializeBinary())
 
     return res
   }

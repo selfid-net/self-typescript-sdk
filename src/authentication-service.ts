@@ -109,8 +109,11 @@ export default class AuthenticationService {
       return new AuthResponse(true)
     }
 
-    this.logger.debug('requesting ' + id)
-    let res = await this.ms.request(j.cid, msgs)
+    this.logger.debug(`requesting ${id}`)
+    let res = await this.ms.request(j.cid, id, msgs)
+    if ('errorMessage' in res) {
+      throw new Error(res.errorMessage)
+    }
 
     return new AuthResponse(res.status === 'accepted', selfid)
   }
