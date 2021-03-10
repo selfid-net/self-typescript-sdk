@@ -111,7 +111,7 @@ export default class SelfSDK {
       sdk.encryptionClient = await Crypto.build(
         sdk.identityService,
         sdk.jwt.deviceID,
-        storageFolder,
+        `${storageFolder}/keys/${sdk.jwt.appKeyID}`,
         storageKey
       )
     } else {
