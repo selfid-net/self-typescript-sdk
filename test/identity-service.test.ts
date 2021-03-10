@@ -142,4 +142,35 @@ describe('jwt', () => {
       }
     })
   })
+
+  describe('IdentityService::getRaw', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.mockResolvedValue({
+        status: 200,
+        data: { id: '1112223334' }
+      })
+
+      let res = await is.getRaw('/random/url')
+      expect(res.status).toEqual(200)
+      expect(res.data.id).toEqual('1112223334')
+    })
+  })
+
+  describe('IdentityService::postRaw', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.mockResolvedValue({
+        status: 200,
+        data: { id: '1112223334' }
+      })
+
+      let status = await is.postRaw('/random/url', {})
+      expect(status).toEqual(200)
+    })
+  })
 })
