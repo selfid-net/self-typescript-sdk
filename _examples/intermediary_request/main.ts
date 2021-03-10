@@ -14,21 +14,25 @@ async function request(appID: string, appSecret: string, selfID: string) {
 
     sdk.logger.info(`sending fact request through an intermediary to ${selfID}`)
     sdk.logger.info(`waiting for user input`)
-    let res = await sdk.facts().requestViaIntermediary(selfID, [{
-        fact: 'phone_number',
-        operator: '==',
-        sources: ['user_specified'],
-        expected_value: '+44111222333'
-    }])
-    if(!res) {
-        sdk.logger.warn(`fact request has timed out`)
-    } else if(res.status === "unauthorized") {
-        sdk.logger.warn("you are unauthorized to run this action")
-    }else if (res.status === 'accepted') {
-        sdk.logger.info("your assertion is....")
-        sdk.logger.info(res.attestationValuesFor('phone_number')[0])
-    } else {
-        sdk.logger.info("your request has been rejected")
+    try {
+        let res = await sdk.facts().requestViaIntermediary(selfID, [{
+            fact: 'phone_number',
+            operator: '==',
+            sources: ['user_specified'],
+            expected_value: '+44111222333'
+        }])
+        if(!res) {
+            sdk.logger.warn(`fact request has timed out`)
+        } else if(res.status === "unauthorized") {
+            sdk.logger.warn("you are unauthorized to run this action")
+        }else if (res.status === 'accepted') {
+            sdk.logger.info("your assertion is....")
+            sdk.logger.info(res.attestationValuesFor('phone_number')[0])
+        } else {
+            sdk.logger.info("your request has been rejected")
+        }
+    } catch (error) {
+        sdk.logger.error(error.toString())
     }
 
     sdk.stop()

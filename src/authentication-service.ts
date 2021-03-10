@@ -22,6 +22,21 @@ import { logging, Logger } from './logging'
 
 type MessageProcessor = (n: number) => any
 
+class AuthResponse {
+  accepted: boolean
+  selfID: string
+  errorMessage: string
+
+  constructor(accepted: boolean, selfID?: string, errorMessage?: string) {
+    this.accepted = accepted
+    this.selfID = selfID
+  }
+
+  isAccepted(): boolean {
+    return this.accepted
+  }
+}
+
 /**
  * Input class to handle authentication requests on self network.
  */
@@ -56,10 +71,7 @@ export default class AuthenticationService {
    * @param selfid the identifier for the identity you want to authenticate
    * @param opts allows you specify optional parameters like the conversation id <cid> or async
    */
-  async request(
-    selfid: string,
-    opts?: { cid?: string; async?: boolean }
-  ): Promise<boolean | string> {
+  async request(selfid: string, opts?: { cid?: string; async?: boolean }): Promise<AuthResponse> {
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
 
@@ -94,13 +106,13 @@ export default class AuthenticationService {
     if (as) {
       this.logger.debug('sending ' + id)
       let res = this.ms.send(j.cid, { data: msgs, waitForResponse: false })
-      return true
+      return new AuthResponse(true)
     }
 
     this.logger.debug('requesting ' + id)
     let res = await this.ms.request(j.cid, msgs)
 
-    return res.status === 'accepted'
+    return new AuthResponse(res.status === 'accepted', selfid)
   }
 
   async buildEnvelope(

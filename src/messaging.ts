@@ -166,7 +166,10 @@ export default class Messaging {
     this.logger.debug(`received ${msg.getId()} (${msg.getType()})`)
     switch (msg.getType()) {
       case MsgType.ERR: {
-        this.logger.info(`error processing ${msg.getId()}`)
+        let ma = msg.toArray()
+        this.logger.warn(`error processing ${msg.getId()} ${ma[ma.length - 1]}`)
+        // TODO(@adriacidre) If we receive an error message, we should try to
+        // relate it with its request and complete the request
         break
       }
       case MsgType.ACK: {

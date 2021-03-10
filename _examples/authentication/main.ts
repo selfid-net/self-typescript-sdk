@@ -14,11 +14,15 @@ async function authenticate(appID: string, appSecret: string, selfID: string) {
 
     sdk.logger.info(`sending an authentication request to ${selfID}`)
     sdk.logger.info(`waiting for user input`)
-    let authenticated = await sdk.authentication().request(selfID)
-    if(authenticated) {
-        sdk.logger.info(`${selfID} is now authenticated 🤘`)
-    } else {
-        sdk.logger.warn(`${selfID} has rejected your authentication request`)
+    try {
+        let res = await sdk.authentication().request(selfID)
+        if(res.accepted) {
+            sdk.logger.info(`${res.selfID} is now authenticated 🤘`)
+        } else {
+            sdk.logger.warn(`${res.selfID} has rejected your authentication request`)
+        }
+    } catch (error) {
+        sdk.logger.error(error.toString())
     }
 
     sdk.stop()

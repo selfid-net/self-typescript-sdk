@@ -2,7 +2,7 @@
 
 import Jwt from './jwt'
 import SignatureGraph from './siggraph'
-import { logging, Logger } from './logging'
+import { logging } from './logging'
 
 const logger = logging.getLogger('core.self-sdk')
 
@@ -167,7 +167,7 @@ export default class IdentityService {
       })
       return res.status
     } catch (error) {
-      logger.warn(`${error}`)
+      logger.info(`POST ${url}: (${error.response.data.status}) ${error.response.data.message}`)
       throw this.errInternal
     }
   }
@@ -183,8 +183,8 @@ export default class IdentityService {
       })
       return res
     } catch (error) {
-      logger.warn(`${error}`)
-      throw this.errInternal
+      logger.info(`GET ${url}: (${error.response.status}) ${error.response.data.message}`)
+      throw new Error(`error : ${error.response.data.message}`)
     }
   }
 }

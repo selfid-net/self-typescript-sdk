@@ -5,15 +5,19 @@ import { exit } from 'process';
 
 async function notify(appID: string, appSecret: string, selfID: string) {
     // const SelfSDK = require("self-sdk");
-    let opts = {}
+    let opts = {'logLevel': 'debug'}
     if (process.env["SELF_ENV"] != "") {
         opts['env'] = process.env["SELF_ENV"]
     }
     let storageFolder = __dirname.split("/").slice(0,-1).join("/") + "/.self_storage"
     const sdk = await SelfSDK.build( appID, appSecret, "random", storageFolder, opts);
 
-    console.log("sending notification")
-    await sdk.messaging().notify(selfID, "hello world!")
+    sdk.logger.info("sending notification")
+    try {
+        await sdk.messaging().notify(selfID, "hello world!")
+    } catch (error) {
+        sdk.logger.error(error.toString())
+    }
 
     sdk.stop()
     exit();

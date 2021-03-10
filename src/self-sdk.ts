@@ -104,7 +104,7 @@ export default class SelfSDK {
 
     storageFolder = `${storageFolder}/apps/${sdk.jwt.appID}/devices/${sdk.jwt.deviceID}`
     var shell = require('shelljs')
-    shell.mkdir('-p', storageFolder)
+    shell.mkdir('-p', `${storageFolder}/keys/${sdk.jwt.appKeyID}`)
 
     sdk.identityService = new IdentityService(sdk.jwt, sdk.baseURL)
     if (options['encryptionClient'] == undefined) {

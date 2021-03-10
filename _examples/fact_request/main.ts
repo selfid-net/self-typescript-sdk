@@ -16,15 +16,19 @@ async function request(appID: string, appSecret: string, selfID: string) {
     sdk.logger.info(`sending a fact request (phone_number) to ${selfID}`)
     sdk.logger.info(`waiting for user input`)
 
-    let res = await sdk.facts().request(selfID, [{ fact: 'phone_number' }])
+    try {
+        let res = await sdk.facts().request(selfID, [{ fact: 'phone_number' }])
 
-    if (!res) {
-      sdk.logger.warn(`fact request has timed out`)
-    } else if (res.status === 'accepted') {
-      let pn = res.attestationValuesFor('phone_number')[0]
-      sdk.logger.info(`${selfID} phone number is "${pn}"`)
-    } else {
-      sdk.logger.warn(`${selfID} has rejected your authentication request`)
+        if (!res) {
+        sdk.logger.warn(`fact request has timed out`)
+        } else if (res.status === 'accepted') {
+        let pn = res.attestationValuesFor('phone_number')[0]
+        sdk.logger.info(`${selfID} phone number is "${pn}"`)
+        } else {
+        sdk.logger.warn(`${selfID} has rejected your authentication request`)
+        }
+    } catch (error) {
+        sdk.logger.error(error.toString())
     }
 
     sdk.stop()

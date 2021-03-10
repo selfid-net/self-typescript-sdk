@@ -198,7 +198,7 @@ describe('AuthenticationService', () => {
       )
 
       let res = await auth.request('selfid')
-      expect(res).toBeFalsy()
+      expect(res.accepted).toBeFalsy()
     })
 
     it('happy path with custom cid', async () => {
