@@ -31,7 +31,7 @@ async function qrFactRequest(appID: string, appSecret: string, selfID: string) {
     );
     await wait(30000)
 
-    sdk.stop()
+    sdk.close()
     exit()
 }
 

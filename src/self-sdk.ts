@@ -159,9 +159,9 @@ export default class SelfSDK {
   }
 
   /**
-   * Gracefully stops the sdk
+   * Gracefully closes the sdk
    */
-  stop() {
+  close() {
     this.jwt.stop()
     this.messagingService.close()
   }

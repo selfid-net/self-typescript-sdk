@@ -26,7 +26,7 @@ describe('SelfSDK test', () => {
   })
 
   afterEach(async () => {
-    sdk.stop()
+    sdk.close()
   })
 
   it('is instantiable', () => {

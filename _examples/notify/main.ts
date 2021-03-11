@@ -19,7 +19,7 @@ async function notify(appID: string, appSecret: string, selfID: string) {
         sdk.logger.error(error.toString())
     }
 
-    sdk.stop()
+    sdk.close()
     exit();
 }
 

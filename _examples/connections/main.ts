@@ -61,7 +61,7 @@ async function manageConnections(appID: string, appSecret: string, user: string)
     sdk.logger.info(` - connections : ${conns.join(",")}`)
     sdk.logger.info("")
 
-    sdk.stop()
+    sdk.close()
     exit();
 }
 
