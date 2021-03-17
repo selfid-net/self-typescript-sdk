@@ -83,6 +83,37 @@ describe('jwt', () => {
     })
   })
 
+  describe('IdentityService::score', () => {
+    it('happy path', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 200,
+        data: { id: '1112223334', score: 10 }
+      })
+
+      let score = await is.score('selfid')
+      expect(score).toEqual(10)
+    })
+
+    it('unauthorized response', async () => {
+      const axios = require('axios')
+
+      jest.mock('axios')
+      axios.get.mockResolvedValue({
+        status: 404,
+        data: { error_message: 404, message: 'unauthorized' }
+      })
+
+      try {
+        await is.get('selfid')
+      } catch (e) {
+        expect(e.message).toBe('identity does not exist')
+      }
+    })
+  })
+
   describe('IdentityService::get', () => {
     let history = require('./__fixtures__/valid_custom_device_entry.json')
     it('happy path', async () => {

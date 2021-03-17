@@ -125,6 +125,38 @@ export default class IdentityService {
     return <Promise<App>>this.getIdentity(selfid, 'apps')
   }
 
+  /**
+   * Returns the score for a specific identity.
+   * @param selfid the identity you want to query.
+   */
+  async score(selfid: string): Promise<BigInteger> {
+    logger.debug('checing identity score')
+    let score: BigInteger
+    let response: any
+
+    try {
+      const axios = require('axios').default
+
+      const options = {
+        headers: { Authorization: `Bearer ${this.jwt.authToken()}` }
+      }
+
+      response = await axios.get(`${this.url}/v1/identities/${selfid}/score`, options)
+    } catch (error) {
+      logger.warn(error)
+      throw this.errInternal
+    }
+
+    if (response.status === 200) {
+      return response.data['score']
+    } else if (response.status === 401) {
+      throw this.errUnauthorized
+    } else if (response.status === 404) {
+      throw this.errUnexistingIdentity
+    } else {
+      throw this.errInternal
+    }
+  }
   private async getIdentity(selfid: string, typ: string): Promise<Identity | App> {
     logger.debug('getting identity details')
     let identity: any
