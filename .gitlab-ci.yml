@@ -71,6 +71,8 @@ stages:
   fi
 
 before_script:
+  - apt-get update
+  - apt-get -y install git
   - export SCRIPTS_DIR=$(mktemp -d)
   - git clone -q --depth 1 "${SCRIPTS_REPO}" "${SCRIPTS_DIR}"
 
