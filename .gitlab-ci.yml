@@ -26,6 +26,7 @@ stages:
   apt-get -y install ${tmpdir}/libself-omemo_0.1.3_amd64.deb
 
 .build: &build |
+  echo "building"
   npm install
 
 .test: &test |
