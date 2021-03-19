@@ -6,20 +6,22 @@ jobs:
   test:
     runs-on: ubuntu-20.04
 
-    env:
-      DEBIAN_FRONTEND: noninteractive
+    container:
+      image: ubuntu:focal-20210217
+      env:
+        DEBIAN_FRONTEND: noninteractive
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Setup environment
         run: |
-          sudo apt-get update
-          sudo apt-get -y install curl libsodium-dev npm
+          apt-get update
+          apt-get -y install curl libsodium-dev npm
           curl https://download.joinself.com/olm/libself-olm_0.1.17_amd64.deb -o /tmp/libself-olm_0.1.17_amd64.deb
           curl https://download.joinself.com/omemo/libself-omemo_0.1.3_amd64.deb -o /tmp/libself-omemo_0.1.3_amd64.deb
-          sudo apt-get -y install /tmp/libself-olm_0.1.17_amd64.deb
-          sudo apt-get -y install /tmp/libself-omemo_0.1.3_amd64.deb
+          apt-get -y install /tmp/libself-olm_0.1.17_amd64.deb
+          apt-get -y install /tmp/libself-omemo_0.1.3_amd64.deb
 
       - name: Build package
         run: npm install
