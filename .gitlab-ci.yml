@@ -9,11 +9,8 @@ stages:
   - publish
 
 .license-check: &license-check |
-  git clone https://${GITHUB_TOKEN}:@github.com/aldgate-ventures/license-finder.git
   source ~/.profile
-  bundler_version=$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | sed 's/ //g')
-  gem install bundler:${bundler_version}
-  bundle install
+  git clone https://${GITHUB_TOKEN}:@github.com/aldgate-ventures/license-finder.git
   license_finder --decisions_file ./license-finder/dependency_decisions.yml
 
 .setup: &setup |
