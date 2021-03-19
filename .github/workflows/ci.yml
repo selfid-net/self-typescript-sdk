@@ -13,10 +13,8 @@ jobs:
   test:
     runs-on: ubuntu-20.04
 
-    container:
-      image: ubuntu:focal-20210217
-      env:
-        DEBIAN_FRONTEND: noninteractive
+    env:
+      DEBIAN_FRONTEND: noninteractive
 
     steps:
       - uses: actions/checkout@v2
