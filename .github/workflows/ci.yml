@@ -16,7 +16,7 @@ jobs:
     container:
       image: ubuntu:focal-20210217
       env:
-        DEBIAN_FRONTEND=noninteractive
+        DEBIAN_FRONTEND: noninteractive
 
     steps:
       - uses: actions/checkout@v2

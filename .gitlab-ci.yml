@@ -121,9 +121,6 @@ npm:
   script:
     - ${SCRIPTS_DIR}/npm-setup
     - *setup
-    - whoami
-    - pwd
-    - sleep 3600
     - *publish
   only:
     - master
