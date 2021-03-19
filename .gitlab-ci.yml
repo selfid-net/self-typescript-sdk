@@ -17,6 +17,7 @@ stages:
   license_finder --decisions_file ./license-finder/dependency_decisions.yml
 
 .setup: &setup |
+  export DEBIAN_FRONTEND=noninteractive
   apt-get update
   apt-get -y install curl libsodium-dev npm
   tmpdir=$(mktemp -d)
