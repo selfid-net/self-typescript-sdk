@@ -4,6 +4,23 @@ import Jwt from '../src/jwt'
 import IdentityService from '../src/identity-service'
 import Crypto from '../src/crypto'
 
+var fs = require('fs')
+var deleteFolderRecursive = function(path) {
+  if (fs.existsSync(path)) {
+    fs.readdirSync(path).forEach(function(file, index) {
+      var curPath = path + '/' + file
+      if (fs.lstatSync(curPath).isDirectory()) {
+        // recurse
+        deleteFolderRecursive(curPath)
+      } else {
+        // delete file
+        fs.unlinkSync(curPath)
+      }
+    })
+    fs.rmdirSync(path)
+  }
+}
+
 /**
  * Crypto test
  */
@@ -65,19 +82,18 @@ describe('crypto', () => {
       }
     )
 
-    const fs = require('fs').promises
-    fs.rmdir('/tmp/alice/', { recursive: true }).then(() => console.log('directory removed!'))
-    fs.rmdir('/tmp/bob/', { recursive: true }).then(() => console.log('directory removed!'))
+    const tmp = require('tmp')
+    const tmpalice = tmp.dirSync()
+    const tmpbob = tmp.dirSync()
 
-    var shell = require('shelljs')
-    shell.mkdir('-p', '/tmp/alice/')
-    shell.mkdir('-p', '/tmp/bob/')
-
-    let aliceC = await Crypto.build(aliceIS, '1', '/tmp/alice', 'storage_key_alice')
-    let bobC = await Crypto.build(bobIS, '1', '/tmp/bob', 'storage_key_bob')
+    let aliceC = await Crypto.build(aliceIS, '1', tmpalice.name, 'storage_key_alice')
+    let bobC = await Crypto.build(bobIS, '1', tmpbob.name, 'storage_key_bob')
 
     let ciphertext = await aliceC.encrypt('hello bob', 'bobID', '1')
     let plaintext = await bobC.decrypt(ciphertext, 'aliceID', '1')
     console.log(plaintext)
+
+    deleteFolderRecursive(tmpalice.name)
+    deleteFolderRecursive(tmpbob.name)
   })
 })
