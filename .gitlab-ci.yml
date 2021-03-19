@@ -25,6 +25,7 @@ stages:
 
 .build: &build |
   npm install
+  tar -czf node_modules.tar.gz node_modules
 
 .test: &test |
   tar -zxf node_modules.tar.gz
@@ -59,12 +60,13 @@ stages:
   fi
 
 .publish: &publish |
-  version=$(grep 'VERSION = ' ./lib/version.rb | tr -d '"' | awk '{print $3}')
+  version=$(grep '"version":' package.json | awk '{print $2}' | tr -d '",')
 
-  if ! gem search -a selfsdk | grep $version; then
-    gem push selfsdk-${version}.gem
+  if ! npm view self-sdk versions | grep $version; then
+    tar -zxf node_modules.tar.gz
+    npm publish --access public
   else
-    echo "Gem version already exists. Nothing to do here."
+    echo "Package version already exists. Nothing to do here."
   fi
 
 before_script:
@@ -77,10 +79,9 @@ license-check:
   stage: pre-build
   image: licensefinder/license_finder
   script:
+    - echo "Broken. Needs investigating."
     - exit 1
     - ${SCRIPTS_DIR}/git-setup
-    - *setup
-    - *build
     - *license-check
   allow_failure: true
   only:
@@ -91,7 +92,6 @@ build:
   script:
     - *setup
     - *build
-    - tar -czf node_modules.tar.gz node_modules
   artifacts:
     paths:
       - node_modules.tar.gz
@@ -120,6 +120,7 @@ npm:
   stage: publish
   script:
     - ${SCRIPTS_DIR}/npm-setup
+    - *setup
     - *publish
   only:
     - master
