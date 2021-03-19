@@ -28,6 +28,10 @@ describe('messaging', () => {
     is = new IdentityService(jwt, 'https://api.joinself.com/')
     ec = new EncryptionMock()
     ms = new Messaging('', jwt, is, ec)
+
+    const tmp = require('tmp')
+    const tmpobj = tmp.dirSync()
+    ms.offsetPath = tmpobj.name + '/.self_storage'
   })
 
   afterEach(async () => {
@@ -37,6 +41,7 @@ describe('messaging', () => {
 
   describe('Messaging::processIncommingMessage', () => {
     let history = require('./__fixtures__/valid_custom_device_entry.json')
+
     it('happy path', async () => {
       const axios = require('axios')
 
