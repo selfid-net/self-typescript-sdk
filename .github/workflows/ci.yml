@@ -1,20 +1,13 @@
 name: CI
 
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   test:
     runs-on: ubuntu-20.04
 
     container:
-      image: ubuntu:focal-20210217
+      image: ubuntu:20.04
       env:
         DEBIAN_FRONTEND: noninteractive
 
@@ -30,8 +23,11 @@ jobs:
           apt-get -y install /tmp/libself-olm_0.1.17_amd64.deb
           apt-get -y install /tmp/libself-omemo_0.1.3_amd64.deb
 
-      - name: Build package
+      - name: Install dependencies
         run: npm install
+ 
+      - name: Build package
+        run: npm run build
 
       - name: Test package
-        run: npm test
+        run: npm run test
