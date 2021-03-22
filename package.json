@@ -28,7 +28,7 @@
     "doc": "NODE_OPTIONS=--max_old_space_size=8192 typedoc --out docs --target es6 --theme minimal --mode file src",
     "build": "tsc --module commonjs && rollup -c rollup.config.ts && NODE_OPTIONS=--max_old_space_size=8192 typedoc --out docs --target es6 --theme minimal --mode file src",
     "start": "rollup -c rollup.config.ts -w",
-    "test": "jest --ci --runInBand --clearCache --verbose",
+    "test": "jest --ci --runInBand --verbose",
     "test:watch": "jest --coverage --watch",
     "test:prod": "npm run lint && npm run test -- --no-cache",
     "deploy-docs": "ts-node tools/gh-pages-publish",
