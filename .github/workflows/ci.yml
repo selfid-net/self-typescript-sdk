@@ -23,5 +23,12 @@ jobs:
           curl https://download.joinself.com/omemo/libself-omemo_0.1.3_amd64.deb -o /tmp/libself-omemo_0.1.3_amd64.deb
           apt-get -y install /tmp/libself-olm_0.1.17_amd64.deb
           apt-get -y install /tmp/libself-omemo_0.1.3_amd64.deb
-          npm install
-          npm run test
+
+      - name: Install dependencies
+        run: npm install
+ 
+      - name: Build package
+        run: npm run build
+
+      - name: Test package
+        run: npm run test
