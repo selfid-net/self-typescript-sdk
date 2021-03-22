@@ -25,11 +25,12 @@ stages:
 
 .build: &build |
   npm install
-  tar -czf node_modules.tar.gz node_modules
+  npm run build
+  tar -czf artefacts.tar.gz dist docs node_modules
 
 .test: &test |
-  tar -zxf node_modules.tar.gz
-  npm test
+  tar -zxf artefacts.tar.gz
+  npm run test
 
 .git-release: &git-release |
   version=$(grep '"version":' package.json | awk '{print $2}' | tr -d '",')
@@ -63,7 +64,7 @@ stages:
   version=$(grep '"version":' package.json | awk '{print $2}' | tr -d '",')
 
   if ! npm view self-sdk versions | grep $version; then
-    tar -zxf node_modules.tar.gz
+    tar -zxf artefacts.tar.gz
     npm publish --access public
   else
     echo "Package version already exists. Nothing to do here."
@@ -94,7 +95,7 @@ build:
     - *build
   artifacts:
     paths:
-      - node_modules.tar.gz
+      - artefacts.tar.gz
   only:
     - branches
 
