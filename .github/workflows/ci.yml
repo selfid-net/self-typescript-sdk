@@ -30,4 +30,3 @@ jobs:
           whoami
           node -v
           npm -v
-          npm test > foo
