@@ -1,13 +1,13 @@
 name: CI
 
-on: [push, pull_request, workflow_dispatch]
+on: [push, workflow_dispatch]
 
 jobs:
   test:
     runs-on: ubuntu-20.04
 
     container:
-      image: ubuntu:focal-20210217
+      image: ubuntu:20.04
       env:
         DEBIAN_FRONTEND: noninteractive
 
