@@ -333,7 +333,7 @@ export default class Messaging {
       while (this.requests.has(id)) {
         let req = this.requests.get(id)
         if (req && req.timeout <= Date.now()) {
-          resolve()
+          resolve(undefined)
           break
         }
         if (req && req.response) {
@@ -342,7 +342,7 @@ export default class Messaging {
         }
         await this.delay(100)
       }
-      resolve()
+      resolve(undefined)
     })
   }
 

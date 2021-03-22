@@ -26,8 +26,6 @@ export default {
   plugins: [
     // Allow json resolution
     json(),
-    // Compile TypeScript files
-    typescript({ useTsconfigDeclarationDir: true }),
 
     // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
     commonjs({
