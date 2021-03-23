@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "self-sdk": "0.0.2-development"
+    "self-sdk": "*"
   }
 }
