@@ -137,7 +137,7 @@
     "pino": "^6.11.2",
     "qrcode-generator-ts": "^0.0.3",
     "self-crypto": "^1.0.5",
-    "self-protos": "^1.0.1",
+    "self-protos": "^1.0.3",
     "text-encoding": "^0.7.0",
     "ts-protoc-gen": "^0.14.0",
     "uuid": "^8.3.2",
