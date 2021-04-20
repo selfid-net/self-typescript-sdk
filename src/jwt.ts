@@ -31,7 +31,7 @@ export default class Jwt {
     this.deviceID = '1'
   }
 
-  public static async build(appID: string, appKey: string, opts?: { ntp?: boolean }): Promise<Jwt> {
+  public static async build(appID: string, appKey: string, opts?: { ntp?: boolean, deviceID?: string }): Promise<Jwt> {
     let jwt = new Jwt()
     jwt.appID = appID
 
@@ -44,6 +44,9 @@ export default class Jwt {
 
     /* istanbul ignore next */
     let ntp = 'ntp' in opts ? opts.ntp : true
+    if ('deviceID' in opts) {
+      jwt.deviceID = opts.deviceID
+    }
 
     /* istanbul ignore next */
     if (!ntp) {
