@@ -69,6 +69,7 @@ export default class SelfSDK {
    *  - env : the environment you want to run your app against
    *  - autoReconnect : will automatically reconnect your app if disconnected
    *  - ntp : enable/disable ntp sync (just for testing)
+   *  - deviceID : the device id to be used.
    * @returns a ready to use SelfSDK
    */
   public static async build(
@@ -82,6 +83,7 @@ export default class SelfSDK {
       env?: string
       autoReconnect?: boolean
       ntp?: boolean
+      deviceID?: string
       encryptionClient?: Crypto
       logLevel?: string
     }
