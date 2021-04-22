@@ -168,11 +168,13 @@ export default class MessagingService {
    */
   async send(recipient: string, request: Request): Promise<void> {
     // Check if the current app still has credits
-    let app = await this.is.app(this.jwt.appID)
-    if (app.paid_actions == false) {
-      throw new Error(
-        'Your credits have expired, please log in to the developer portal and top up your account.'
-      )
+    if (this.jwt.checkPaidActions) {
+      let app = await this.is.app(this.jwt.appID)
+      if (app.paid_actions == false) {
+        throw new Error(
+          'Your credits have expired, please log in to the developer portal and top up your account.'
+        )
+      }
     }
 
     let id = uuidv4()

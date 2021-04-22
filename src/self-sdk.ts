@@ -70,6 +70,7 @@ export default class SelfSDK {
    *  - autoReconnect : will automatically reconnect your app if disconnected
    *  - ntp : enable/disable ntp sync (just for testing)
    *  - deviceID : the device id to be used.
+   *  - checkPaidActions : force to check if app has credits on each request.
    * @returns a ready to use SelfSDK
    */
   public static async build(
@@ -85,7 +86,8 @@ export default class SelfSDK {
       ntp?: boolean
       deviceID?: string
       encryptionClient?: Crypto
-      logLevel?: string
+      logLevel?: string,
+      checkPaidActions?: boolean,
     }
   ): Promise<SelfSDK> {
     let options = opts ? opts : {}
