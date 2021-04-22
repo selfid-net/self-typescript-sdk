@@ -53,19 +53,13 @@ stages:
     echo "Version hasn't changed. Nothing to do here."
   fi
 
-.slack-notify: &slack-notify |
-  if [[ -z ${body} ]]; then
-    slack chat send "New release <https://github.com/joinself/${CI_PROJECT_NAME}|${CI_PROJECT_NAME}> <https://github.com/joinself/${CI_PROJECT_NAME}/commits/${version}|${version}>\n\n- ${subject}" '#ci'
-  else
-    slack chat send "New release <https://github.com/joinself/${CI_PROJECT_NAME}|${CI_PROJECT_NAME}> <https://github.com/joinself/${CI_PROJECT_NAME}/commits/${version}|${version}>\n\n${body}" '#ci'
-  fi
-
 .publish: &publish |
   version=$(grep '"version":' package.json | awk '{print $2}' | tr -d '",')
 
   if ! npm view self-sdk versions | grep $version; then
     tar -zxf artefacts.tar.gz
     npm publish --access public
+    ${SCRIPTS_DIR}/slack-release-notification ${version}
   else
     echo "Package version already exists. Nothing to do here."
   fi
@@ -113,7 +107,6 @@ release:
   script:
     - ${SCRIPTS_DIR}/git-setup
     - *git-release
-    - *slack-notify
   only:
     - master
 
