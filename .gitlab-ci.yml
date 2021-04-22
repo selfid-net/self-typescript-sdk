@@ -27,6 +27,7 @@ stages:
   apt-get update
   apt-get -y install python3
   curl https://raw.githubusercontent.com/rockymadden/slack-cli/master/src/slack -o /usr/local/bin/slack
+  chmod +x /usr/local/bin/slack
 
 .build: &build |
   npm install
