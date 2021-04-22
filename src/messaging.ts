@@ -116,6 +116,13 @@ export default class Messaging {
           await this.processResponse(p, 'identities.authenticate.resp')
           break
         }
+        default: {
+          if (this.callbacks.has(p.typ)) {
+            let fn = this.callbacks.get(p.typ)
+            fn(p)
+          }
+          break
+        }
       }
     } catch (error) {
       this.logger.info(`skipping message due ${error}`)
