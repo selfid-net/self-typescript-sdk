@@ -23,6 +23,7 @@ export default class Jwt {
   date: any
   ntpSynchronization: any
   diffDates: any
+  checkPaidActions: boolean
 
   constructor() {
     this.appID = ''
@@ -31,7 +32,7 @@ export default class Jwt {
     this.deviceID = '1'
   }
 
-  public static async build(appID: string, appKey: string, opts?: { ntp?: boolean, deviceID?: string }): Promise<Jwt> {
+  public static async build(appID: string, appKey: string, opts?: { ntp?: boolean, deviceID?: string, checkPaidActions?: boolean }): Promise<Jwt> {
     let jwt = new Jwt()
     jwt.appID = appID
 
@@ -44,8 +45,14 @@ export default class Jwt {
 
     /* istanbul ignore next */
     let ntp = 'ntp' in opts ? opts.ntp : true
+
     if ('deviceID' in opts) {
       jwt.deviceID = opts.deviceID
+    }
+
+    jwt.checkPaidActions = true
+    if ('checkPaidActions' in opts) {
+      jwt.checkPaidActions = opts.checkPaidActions
     }
 
     /* istanbul ignore next */

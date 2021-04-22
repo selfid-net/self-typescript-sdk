@@ -75,11 +75,13 @@ export default class AuthenticationService {
     let options = opts ? opts : {}
     let as = options.async ? options.async : false
 
-    let app = await this.is.app(this.jwt.appID)
-    if (app.paid_actions == false) {
-      throw new Error(
-        'Your credits have expired, please log in to the developer portal and top up your account.'
-      )
+    if (this.jwt.checkPaidActions) {
+      let app = await this.is.app(this.jwt.appID)
+      if (app.paid_actions == false) {
+        throw new Error(
+          'Your credits have expired, please log in to the developer portal and top up your account.'
+        )
+      }
     }
 
     if (as == false) {
