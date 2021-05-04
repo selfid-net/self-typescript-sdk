@@ -218,12 +218,16 @@ export default class MessagingService {
     let iat = new Date(Math.floor(this.jwt.now()))
     let exp = new Date(Math.floor(this.jwt.now() + 300000 * 60))
 
-    request['jti'] = uuidv4()
+    if (!('jti' in request)) {
+        request['jti'] = uuidv4()
+    }
     request['iss'] = this.jwt.appID
     request['sub'] = selfid
     request['iat'] = iat.toISOString()
     request['exp'] = exp.toISOString()
-    request['cid'] = uuidv4()
+    if (!('cid' in request)) {
+        request['cid'] = uuidv4()
+    }
 
     return request
   }
