@@ -177,8 +177,6 @@ export default class MessagingService {
       }
     }
 
-    let id = uuidv4()
-
     let j = this.buildRequest(recipient, request)
     let ciphertext = this.jwt.toSignedJson(j)
 
@@ -187,7 +185,7 @@ export default class MessagingService {
     // Send the message to all recipient devices.
     let devices = await this.is.devices(recipient)
     for (var i = 0; i < devices.length; i++) {
-      var msg = await this.buildEnvelope(id, recipient, devices[i], ciphertext)
+      var msg = await this.buildEnvelope(uuidv4(), recipient, devices[i], ciphertext)
       msgs.push(msg.serializeBinary())
     }
 
@@ -195,7 +193,7 @@ export default class MessagingService {
     let currentIdentityDevices = await this.is.devices(this.jwt.appID)
     for (var i = 0; i < currentIdentityDevices.length; i++) {
       if (currentIdentityDevices[i] != this.jwt.deviceID) {
-        var msg = await this.buildEnvelope(id, this.jwt.appID, currentIdentityDevices[i], ciphertext)
+        var msg = await this.buildEnvelope(uuidv4(), this.jwt.appID, currentIdentityDevices[i], ciphertext)
         msgs.push(msg.serializeBinary())
       }
     }
