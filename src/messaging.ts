@@ -192,12 +192,16 @@ export default class Messaging {
           break
         }
 
+        this.logger.debug("error message received")
+        this.logger.debug(msg.getCiphertext().toString());
+        /*
         Array.from(this.callbacks.keys()).forEach(key => {
           if (this.callbacks[key].uuid == msg.getId()) {
             let fn = this.callbacks[key]
             fn(undefined)
           }
         })
+        */
         break
       }
       case MsgType.ACK: {
