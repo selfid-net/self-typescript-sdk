@@ -180,10 +180,13 @@ export default class MessagingService {
     var msgs = []
 
     // Send the message to all recipient devices.
-    let devices = await this.is.devices(recipient)
-    for (var i = 0; i < devices.length; i++) {
-      var msg = await this.buildEnvelope(uuidv4(), recipient, devices[i], ciphertext)
-      msgs.push(msg.serializeBinary())
+    if (recipient != this.jwt.appID) {
+      console.log("sending to a different identity")
+      let devices = await this.is.devices(recipient)
+      for (var i = 0; i < devices.length; i++) {
+        var msg = await this.buildEnvelope(uuidv4(), recipient, devices[i], ciphertext)
+        msgs.push(msg.serializeBinary())
+      }
     }
 
     // Send the message also to all current identity devices for synchronization.
