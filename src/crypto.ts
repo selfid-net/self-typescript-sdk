@@ -130,7 +130,7 @@ export default class Crypto {
   }
 
 
-  private getInboundSessionWithBob(message: string, session_file_name: string): any {
+  getInboundSessionWithBob(message: string, session_file_name: string): any {
     const fs = require('fs')
     const crypto = require('self-crypto')
 
@@ -194,7 +194,7 @@ export default class Crypto {
       return session_with_bob
   }
 
-  private async getOutboundSessionWithBob(recipient, recipientDevice, session_file_name: string): Promise<any> {
+  async getOutboundSessionWithBob(recipient: string, recipientDevice: string, session_file_name: string): Promise<any> {
     const fs = require('fs')
     const crypto = require('self-crypto')
 

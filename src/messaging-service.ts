@@ -254,7 +254,6 @@ export default class MessagingService {
     }
     if (!('gid' in request)) {
       request['gid'] = uuidv4()
-    } else {
       request['sub'] = selfid
     }
 
