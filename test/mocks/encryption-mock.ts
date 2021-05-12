@@ -1,6 +1,7 @@
 // Copyright 2020 Self Group Ltd. All Rights Reserved.
 
 import IdentityService from '../../src/identity-service'
+import { Recipient } from '../../src/crypto';
 
 export default class EncryptionMock {
   client: IdentityService
@@ -12,8 +13,7 @@ export default class EncryptionMock {
 
   public async encrypt(
     message: string,
-    recipient: string,
-    recipientDevice: string
+    recipients: Recipient[],
   ): Promise<string> {
     const encode = (str: string): string => Buffer.from(str, 'binary').toString('base64')
     return encode(message)
@@ -30,4 +30,7 @@ export default class EncryptionMock {
   public sessionPath(selfid: string, device: string): string {
     return `/tmp/random-session.pickle`
   }
+
+  getInboundSessionWithBob(message: string, session_file_name: string): any {}
+  async getOutboundSessionWithBob(recipient, recipientDevice, session_file_name: string): Promise<any> {}
 }

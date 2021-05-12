@@ -89,7 +89,10 @@ describe('crypto', () => {
     let aliceC = await Crypto.build(aliceIS, '1', tmpalice.name, 'storage_key_alice')
     let bobC = await Crypto.build(bobIS, '1', tmpbob.name, 'storage_key_bob')
 
-    let ciphertext = await aliceC.encrypt('hello bob', 'bobID', '1')
+    let ciphertext = await aliceC.encrypt('hello bob', [{
+      id: 'bobID',
+      device: '1',
+    }])
     let plaintext = await bobC.decrypt(ciphertext, 'aliceID', '1')
     console.log(plaintext)
 
