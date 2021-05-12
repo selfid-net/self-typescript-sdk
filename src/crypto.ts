@@ -1,7 +1,7 @@
 import IdentityService from './identity-service'
 
-class Recipient {
-  id: string,
+export class Recipient {
+  id: string
   device: string
 }
 
@@ -66,41 +66,41 @@ export default class Crypto {
   }
 
   public async encrypt(message: string, recipients: Recipient[]): Promise<string> {
-    let recipient = recipients[0].id
-    let recipientDevice = recipients[0].device
-
-    let session_file_name = this.sessionPath(recipient, recipientDevice)
     const fs = require('fs')
     const crypto = require('self-crypto')
 
-    let session_with_bob = this.getOutboundSessionWithBob(recipient, recipientDevice, session_file_name)
-
-    // 3) create a group session and set the identity of the account youre using
+    // create a group session and set the identity of the account youre using
     let group_session = crypto.create_group_session(
       `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
     )
 
-    // 4) add all recipients and their sessions
-    crypto.add_group_participant(group_session, `${recipient}:${recipientDevice}`, session_with_bob)
+    let sessions = {}
+    for (var i = 0; i < recipients.length; i++) {
+      let session_file_name = this.sessionPath(recipients[i].id, recipients[i].device)
+      let session_with_bob = await this.getOutboundSessionWithBob(recipients[i].id, recipients[i].device, session_file_name)
+
+      crypto.add_group_participant(group_session, `${recipients[i].id}:${recipients[i].device}`, session_with_bob)
+
+      sessions[session_file_name] = session_with_bob
+    }
 
     // 5) encrypt a message
     let ciphertext = crypto.group_encrypt(group_session, message)
 
-    // 6) store the session to a file
-    let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
-    fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
+    // 6) store the sessions to a file
+    for (const file in sessions) {
+      let pickle = crypto.pickle_session(sessions[file], this.storageKey)
+      fs.writeFileSync(file, pickle, { mode: 0o600 })
+    }
 
     return ciphertext
   }
 
-  public decrypt(message: string, senders: Recipient[]): string {
-    let sender = senders[0].id
-    let sender_device = senders[0].device
-    let session_file_name = this.sessionPath(sender, sender_device)
-
+  public decrypt(message: string, sender: string, sender_device: string): string {
     const fs = require('fs')
     const crypto = require('self-crypto')
 
+    let session_file_name = this.sessionPath(sender, sender_device)
     let session_with_bob = this.getInboundSessionWithBob(message, session_file_name)
 
     // 8) create a group session and set the identity of the account you're using
@@ -194,7 +194,7 @@ export default class Crypto {
       return session_with_bob
   }
 
-  private getOutboundSessionWithBob(recipient, recipientDevice, session_file_name: string): any {
+  private async getOutboundSessionWithBob(recipient, recipientDevice, session_file_name: string): Promise<any> {
     const fs = require('fs')
     const crypto = require('self-crypto')
 

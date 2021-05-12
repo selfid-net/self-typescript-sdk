@@ -12,6 +12,7 @@ import { ACLCommand } from 'self-protos/aclcommand_pb'
 import { Message } from 'self-protos/message_pb'
 import Crypto from './crypto'
 import { logging, Logger } from './logging'
+import { Recipient } from './crypto';
 
 const logger = logging.getLogger('core.self-sdk')
 
@@ -160,10 +161,19 @@ export default class MessagingService {
 
   /**
    * Sends a raw message
-   * @param recipient the recipient's identifier.
+   * @param recipient the recipient/s identifier/s.
    * @param request the request to be sent.
    */
-  async send(recipient: string, request: Request): Promise<void> {
+  async send(recipient: (string | Array<string>), request: Request): Promise<void> {
+    let recipientIDs = []
+    let sub = ""
+    if (!Array.isArray(recipient)) {
+      sub = recipient
+      recipientIDs = [recipient]
+    } else {
+      recipientIDs = recipient
+    }
+
     // Check if the current app still has credits
     if (this.jwt.checkPaidActions) {
       let app = await this.is.app(this.jwt.appID)
@@ -174,18 +184,22 @@ export default class MessagingService {
       }
     }
 
-    let j = this.buildRequest(recipient, request)
+    let j = this.buildRequest(sub, request)
     let ciphertext = this.jwt.toSignedJson(j)
 
-    var msgs = []
+    let recipients:Recipient[] = []
 
     // Send the message to all recipient devices.
     if (recipient != this.jwt.appID) {
       console.log("sending to a different identity")
-      let devices = await this.is.devices(recipient)
-      for (var i = 0; i < devices.length; i++) {
-        var msg = await this.buildEnvelope(uuidv4(), recipient, devices[i], ciphertext)
-        msgs.push(msg.serializeBinary())
+      for (var k = 0; k < recipientIDs.length; k++) {
+        let devices = await this.is.devices(recipientIDs[k])
+        for (var i = 0; i < devices.length; i++) {
+          recipients.push({
+            id: recipientIDs[k],
+            device: devices[i]
+          })
+        }
       }
     }
 
@@ -193,9 +207,20 @@ export default class MessagingService {
     let currentIdentityDevices = await this.is.devices(this.jwt.appID)
     for (var i = 0; i < currentIdentityDevices.length; i++) {
       if (currentIdentityDevices[i] != this.jwt.deviceID) {
-        var msg = await this.buildEnvelope(uuidv4(), this.jwt.appID, currentIdentityDevices[i], ciphertext)
-        msgs.push(msg.serializeBinary())
+        recipients.push({
+          id: this.jwt.appID,
+          device: currentIdentityDevices[i]
+        })
       }
+    }
+
+    let ct = await this.crypto.encrypt(ciphertext, recipients)
+    let fct = this.fixEncryption(ct)
+
+    var msgs = []
+    for (var i = 0; i < recipients.length; i++) {
+      var msg = await this.buildEnvelope(uuidv4(), recipients[i].id, recipients[i].device, fct)
+      msgs.push(msg.serializeBinary())
     }
 
     this.ms.send(j.cid, { data: msgs, waitForResponse: false })
@@ -222,11 +247,15 @@ export default class MessagingService {
         request['jti'] = uuidv4()
     }
     request['iss'] = this.jwt.appID
-    request['sub'] = selfid
     request['iat'] = iat.toISOString()
     request['exp'] = exp.toISOString()
     if (!('cid' in request)) {
         request['cid'] = uuidv4()
+    }
+    if (!('gid' in request)) {
+      request['gid'] = uuidv4()
+    } else {
+      request['sub'] = selfid
     }
 
     return request
@@ -236,18 +265,14 @@ export default class MessagingService {
     id: string,
     selfid: string,
     device: string,
-    ciphertext: string
+    ct: string
   ): Promise<Message> {
     const msg = new Message()
     msg.setType(MsgType.MSG)
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    let ct = await this.crypto.encrypt(ciphertext, [{
-      id: selfid,
-      device: device,
-    }])
-    msg.setCiphertext(this.fixEncryption(ct))
+    msg.setCiphertext(ct)
 
     return msg
   }

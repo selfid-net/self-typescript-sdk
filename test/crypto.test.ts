@@ -93,10 +93,7 @@ describe('crypto', () => {
       id: 'bobID',
       device: '1',
     }])
-    let plaintext = await bobC.decrypt(ciphertext, [{
-      id: 'aliceID',
-      device: '1',
-    }])
+    let plaintext = await bobC.decrypt(ciphertext, 'aliceID', '1')
     console.log(plaintext)
 
     deleteFolderRecursive(tmpalice.name)
