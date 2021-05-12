@@ -1,5 +1,10 @@
 import IdentityService from './identity-service'
 
+class Recipient {
+  id: string,
+  device: string
+}
+
 export default class Crypto {
   client: IdentityService
   device: string
@@ -60,51 +65,15 @@ export default class Crypto {
     return cc
   }
 
-  public async encrypt(
-    message: string,
-    recipient: string,
-    recipientDevice: string
-  ): Promise<string> {
-    let session_file_name = this.sessionPath(recipient, recipientDevice)
-    let session_with_bob: any
+  public async encrypt(message: string, recipients: Recipient[]): Promise<string> {
+    let recipient = recipients[0].id
+    let recipientDevice = recipients[0].device
 
+    let session_file_name = this.sessionPath(recipient, recipientDevice)
     const fs = require('fs')
     const crypto = require('self-crypto')
 
-    if (fs.existsSync(session_file_name)) {
-      // 2a) if bob's session file exists load the pickle from the file
-      let session = fs.readFileSync(session_file_name)
-      session_with_bob = crypto.unpickle_session(session.toString(), this.storageKey)
-    } else {
-      // 2b-i) if you have not previously sent or recevied a message to/from bob,
-      //       you must get his identity key from GET /v1/identities/bob/
-      let ed25519_identity_key = await this.client.devicePublicKey(recipient, recipientDevice)
-
-      // 2b-ii) get a one time key for bob
-      let getRes = await this.client.getRaw(
-        `${this.client.url}/v1/identities/${recipient}/devices/${recipientDevice}/pre_keys`
-      )
-
-      if (getRes.status != 200) {
-        throw new Error('could not get identity pre_keys')
-      }
-
-      let one_time_key = getRes.data['key']
-
-      // 2b-iii) convert bobs ed25519 identity key to a curve25519 key
-      let curve25519_identity_key = crypto.ed25519_pk_to_curve25519(ed25519_identity_key)
-
-      // 2b-iv) create the session with bob
-      session_with_bob = crypto.create_outbound_session(
-        this.account,
-        curve25519_identity_key,
-        one_time_key
-      )
-
-      // 2b-v) store the session to a file
-      let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
-      fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
-    }
+    let session_with_bob = this.getOutboundSessionWithBob(recipient, recipientDevice, session_file_name)
 
     // 3) create a group session and set the identity of the account youre using
     let group_session = crypto.create_group_session(
@@ -124,67 +93,15 @@ export default class Crypto {
     return ciphertext
   }
 
-  public decrypt(message: string, sender: string, sender_device: string): string {
+  public decrypt(message: string, senders: Recipient[]): string {
+    let sender = senders[0].id
+    let sender_device = senders[0].device
     let session_file_name = this.sessionPath(sender, sender_device)
-    let session_with_bob: any
 
     const fs = require('fs')
     const crypto = require('self-crypto')
 
-    if (fs.existsSync(session_file_name)) {
-      // 7a) if bobs's session file exists load the pickle from the file
-      let session = fs.readFileSync(session_file_name)
-      session_with_bob = crypto.unpickle_session(session.toString(), this.storageKey)
-    } else {
-      // 7b-i) if you have not previously sent or received a message to/from bob,
-      //       you should extract the initial message from the group message intended
-      //       for your account id.
-
-      let group_message_json = JSON.parse(message)
-      let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
-      let ciphertext = group_message_json['recipients'][myID]['ciphertext']
-
-      // 7b-ii) use the initial message to create a session for bob or carol
-      session_with_bob = crypto.create_inbound_session(this.account, ciphertext)
-
-      // 7b-iii) store the session to a file
-      let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
-      fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
-
-      // 7c-i) remove the sessions prekey from the account
-      crypto.remove_one_time_keys(this.account, session_with_bob)
-
-      // 7d-i) publish new prekeys if the amount of remaining keys has fallen below a threshold
-      let currentOneTimeKeys = JSON.parse(crypto.one_time_keys(this.account))
-
-      if (Object.keys(currentOneTimeKeys['curve25519']).length < 10) {
-        // 7d-ii) generate some keys for alice and publish them
-        crypto.create_account_one_time_keys(this.account, 100)
-
-        let oneTimeKeys = JSON.parse(crypto.one_time_keys(this.account))
-
-        let keys: Array<any>
-
-        for (var i = 0; i < oneTimeKeys['curve25519']; i++) {
-          let kid = oneTimeKeys['curve25519'][i]
-          if (!(kid in currentOneTimeKeys)) {
-            keys.push({ id: kid, key: oneTimeKeys['curve25519'][kid] })
-          }
-        }
-
-        // 7d-iii) post those keys to POST /v1/identities/<selfid>/devices/1/pre_keys/
-        this.client.postRaw(
-          `${this.client.url}/v1/identities/${this.client.jwt.appID}/devices/${this.client.jwt.deviceID}/pre_keys`,
-          keys
-        )
-
-        // TODO: (@adriacidre) : retry if the response is != 200
-      }
-
-      // 7e-i) save the account state
-      let account_pickle = crypto.pickle_account(this.account, this.storageKey)
-      fs.writeFileSync(this.accountPath(), account_pickle, { mode: 0o600 })
-    }
+    let session_with_bob = this.getInboundSessionWithBob(message, session_file_name)
 
     // 8) create a group session and set the identity of the account you're using
     let group_session = crypto.create_group_session(
@@ -211,4 +128,114 @@ export default class Crypto {
   public sessionPath(selfid: string, device: string): string {
     return `${this.storageFolder}/${selfid}:${device}-session.pickle`
   }
+
+
+  private getInboundSessionWithBob(message: string, session_file_name: string): any {
+    const fs = require('fs')
+    const crypto = require('self-crypto')
+
+    let session_with_bob: any
+
+    if (fs.existsSync(session_file_name)) {
+        // 7a) if bobs's session file exists load the pickle from the file
+        let session = fs.readFileSync(session_file_name)
+        session_with_bob = crypto.unpickle_session(session.toString(), this.storageKey)
+      } else {
+        // 7b-i) if you have not previously sent or received a message to/from bob,
+        //       you should extract the initial message from the group message intended
+        //       for your account id.
+
+        let group_message_json = JSON.parse(message)
+        let myID = `${this.client.jwt.appID}:${this.client.jwt.deviceID}`
+        let ciphertext = group_message_json['recipients'][myID]['ciphertext']
+
+        // 7b-ii) use the initial message to create a session for bob or carol
+        session_with_bob = crypto.create_inbound_session(this.account, ciphertext)
+
+        // 7b-iii) store the session to a file
+        let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
+        fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
+
+        // 7c-i) remove the sessions prekey from the account
+        crypto.remove_one_time_keys(this.account, session_with_bob)
+
+        // 7d-i) publish new prekeys if the amount of remaining keys has fallen below a threshold
+        let currentOneTimeKeys = JSON.parse(crypto.one_time_keys(this.account))
+
+        if (Object.keys(currentOneTimeKeys['curve25519']).length < 10) {
+          // 7d-ii) generate some keys for alice and publish them
+          crypto.create_account_one_time_keys(this.account, 100)
+
+          let oneTimeKeys = JSON.parse(crypto.one_time_keys(this.account))
+
+          let keys: Array<any>
+
+          for (var i = 0; i < oneTimeKeys['curve25519']; i++) {
+            let kid = oneTimeKeys['curve25519'][i]
+            if (!(kid in currentOneTimeKeys)) {
+              keys.push({ id: kid, key: oneTimeKeys['curve25519'][kid] })
+            }
+          }
+
+          // 7d-iii) post those keys to POST /v1/identities/<selfid>/devices/1/pre_keys/
+          this.client.postRaw(
+            `${this.client.url}/v1/identities/${this.client.jwt.appID}/devices/${this.client.jwt.deviceID}/pre_keys`,
+            keys
+          )
+
+          // TODO: (@adriacidre) : retry if the response is != 200
+        }
+
+        // 7e-i) save the account state
+        let account_pickle = crypto.pickle_account(this.account, this.storageKey)
+        fs.writeFileSync(this.accountPath(), account_pickle, { mode: 0o600 })
+      }
+
+      return session_with_bob
+  }
+
+  private getOutboundSessionWithBob(recipient, recipientDevice, session_file_name: string): any {
+    const fs = require('fs')
+    const crypto = require('self-crypto')
+
+    let session_with_bob: any
+
+    if (fs.existsSync(session_file_name)) {
+        // 2a) if bob's session file exists load the pickle from the file
+        let session = fs.readFileSync(session_file_name)
+        session_with_bob = crypto.unpickle_session(session.toString(), this.storageKey)
+      } else {
+        // 2b-i) if you have not previously sent or recevied a message to/from bob,
+        //       you must get his identity key from GET /v1/identities/bob/
+        let ed25519_identity_key = await this.client.devicePublicKey(recipient, recipientDevice)
+
+        // 2b-ii) get a one time key for bob
+        let getRes = await this.client.getRaw(
+          `${this.client.url}/v1/identities/${recipient}/devices/${recipientDevice}/pre_keys`
+        )
+
+        if (getRes.status != 200) {
+          throw new Error('could not get identity pre_keys')
+        }
+
+        let one_time_key = getRes.data['key']
+
+        // 2b-iii) convert bobs ed25519 identity key to a curve25519 key
+        let curve25519_identity_key = crypto.ed25519_pk_to_curve25519(ed25519_identity_key)
+
+        // 2b-iv) create the session with bob
+        session_with_bob = crypto.create_outbound_session(
+          this.account,
+          curve25519_identity_key,
+          one_time_key
+        )
+
+        // 2b-v) store the session to a file
+        let pickle = crypto.pickle_session(session_with_bob, this.storageKey)
+        fs.writeFileSync(session_file_name, pickle, { mode: 0o600 })
+      }
+
+      return session_with_bob
+  }
+
 }

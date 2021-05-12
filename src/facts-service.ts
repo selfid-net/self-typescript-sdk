@@ -127,7 +127,10 @@ export default class FactsService {
     msg.setId(id)
     msg.setSender(`${this.jwt.appID}:${this.jwt.deviceID}`)
     msg.setRecipient(`${selfid}:${device}`)
-    let ct = await this.crypto.encrypt(ciphertext, selfid, device)
+    let ct = await this.crypto.encrypt(ciphertext, [{
+      id: selfid,
+      device: device,
+    }])
     msg.setCiphertext(this.fixEncryption(ct))
 
     return msg
