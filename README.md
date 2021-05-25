@@ -22,8 +22,8 @@ $ npm install self-sdk
 
 #### Debian/Ubuntu
 ```sh
-$ curl -O http://download.joinself.com/olm/libself-olm_0.1.17_amd64.deb
-$ curl -O http://download.joinself.com/omemo/libself-omemo_0.1.2_amd64.deb
+$ curl -O https://download.joinself.com/olm/libself-olm_0.1.28_amd64.deb
+$ curl -O https://download.joinself.com/omemo/libself-omemo_0.1.12_amd64.deb
 $ apt install libsodium-dev
 $ apt install ./libself-olm_0.1.17_amd64.deb ./libself-omemo_0.1.2_amd64.deb
 ```
