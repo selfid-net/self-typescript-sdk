@@ -32,6 +32,7 @@ export default class MessagingService {
   ms: Messaging
   jwt: Jwt
   crypto: Crypto
+  connections: string[]
 
   /**
    * constructs a MessagingService
@@ -44,6 +45,7 @@ export default class MessagingService {
     this.ms = ms
     this.is = is
     this.crypto = ec
+    this.connections = []
   }
 
   /**
@@ -62,6 +64,7 @@ export default class MessagingService {
    */
   async permitConnection(selfid: string): Promise<boolean | Response> {
     logger.debug('permitting connection')
+    this.connections.push(selfid)
     let payload = this.jwt.prepare({
       jti: uuidv4(),
       cid: uuidv4(),
@@ -95,16 +98,18 @@ export default class MessagingService {
    */
   async allowedConnections(): Promise<String[]> {
     logger.debug('listing allowed connections')
-    let connections: ACLRule[] = []
 
-    const msg = new AccessControlList()
-    msg.setType(MsgType.ACL)
-    msg.setId(uuidv4())
-    msg.setCommand(ACLCommand.LIST)
+    if (this.connections.length === 0) {
+      const msg = new AccessControlList()
+      msg.setType(MsgType.ACL)
+      msg.setId(uuidv4())
+      msg.setCommand(ACLCommand.LIST)
 
-    let res = await this.ms.request(msg.getId(), msg.getId(), msg.serializeBinary())
+      let res = await this.ms.request(msg.getId(), msg.getId(), msg.serializeBinary())
+      this.connections = res
+    }
 
-    return res
+    return this.connections
   }
 
   /**
@@ -131,6 +136,10 @@ export default class MessagingService {
    */
   async revokeConnection(selfid: string): Promise<boolean | Response> {
     logger.debug('revoking connection')
+    const index = this.connections.indexOf(selfid, 0);
+    if (index > -1) {
+      this.connections.splice(index, 1);
+    }
 
     let payload = this.jwt.prepare({
       iss: this.jwt.appID,
