@@ -64,6 +64,11 @@ export default class MessagingService {
    */
   async permitConnection(selfid: string): Promise<boolean | Response> {
     logger.debug('permitting connection')
+    if (this.connections.includes(selfid)) {
+      logger.debug('skipping : connection is already permitted')
+      return true
+    }
+
     this.connections.push(selfid)
     let payload = this.jwt.prepare({
       jti: uuidv4(),
