@@ -238,7 +238,6 @@ export default class Messaging {
         this.ws = undefined;
         this.connect();
       }
-      this.connected = false;
     }
 
     this.ws.onmessage = async input => {
