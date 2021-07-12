@@ -166,6 +166,7 @@ export default class Messaging {
 
   close() {
     if (this.connected) {
+      this.connected = false
       this.ws.close()
     }
   }
@@ -231,7 +232,12 @@ export default class Messaging {
     }
 
     this.ws.onclose = () => {
-      this.connected = false
+      // If is not manually closed try to reconnect
+      if (this.connected === true) {
+        this.logger.debug(`reconnecting...`)
+        this.ws = undefined;
+        this.connect();
+      }
     }
 
     this.ws.onmessage = async input => {
