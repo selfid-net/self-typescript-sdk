@@ -234,6 +234,7 @@ export default class Messaging {
     this.ws.onclose = () => {
       // If is not manually closed try to reconnect
       if (this.connected === true) {
+        this.logger.debug(`reconnecting...`)
         this.ws = undefined;
         this.connect();
       }
